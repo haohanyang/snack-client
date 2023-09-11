@@ -1,0 +1,8 @@
+{
+  "name": "snack-client",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite",
+  "id": "1d5df476"
+}

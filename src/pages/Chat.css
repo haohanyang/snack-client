@@ -1,0 +1,3 @@
+.ios .chat-input-form {
+    padding-bottom: env(safe-area-inset-bottom);
+}

@@ -1,0 +1,45 @@
+name: Create a dist.zip artifact
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - .github/workflows/dist.yaml
+      - src/components/**
+      - src/model/**
+      - src/pages/**
+      - src/slice/**
+      - src/theme/**
+      - src/**
+
+jobs:
+  build-and-zip:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: "npm"
+    - name: Install dependencies
+      run: npm ci
+    - name: Set up environment variables
+      run: | 
+        echo "VITE_APP_TITLE=snack" > .env
+        echo "VITE_API_BASE_URL=/api/v1" >> .env
+        echo "VITE_WS_BROKER_URL=/ws" >> .env
+        echo "VITE_COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID" >> .env
+        echo "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID" >> .env
+      env:
+        COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+        COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+    - name: Build
+      run: | 
+        npm run build
+        zip dist.zip dist/* dist/assets/*
+    - name: Upload the artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist.zip
