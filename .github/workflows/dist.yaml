@@ -28,7 +28,6 @@ jobs:
       run: | 
         echo "VITE_APP_TITLE=snack" > .env
         echo "VITE_API_BASE_URL=/api/v1" >> .env
-        echo "VITE_WS_BROKER_URL=/ws" >> .env
         echo "VITE_COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID" >> .env
         echo "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID" >> .env
       env:

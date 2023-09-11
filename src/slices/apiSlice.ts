@@ -31,8 +31,19 @@ export const apiSlice = createApi({
                 try {
                     const { data: me } = await cacheDataLoaded
                     const jwt = (await Auth.currentSession()).getIdToken().getJwtToken()
+
+                    let location = window.location
+                    let ws_url = ""
+
+                    if (location.protocol === "https:") {
+                        ws_url = "wss:"
+                    } else {
+                        ws_url = "ws:"
+                    }
+
+                    ws_url += "//" + location.host + "/ws"
                     stomp = new Client({
-                        brokerURL: import.meta.env.VITE_WS_BROKER_URL,
+                        brokerURL: ws_url,
                         debug: str => {
                             if (process.env.NODE_ENV === "development") {
                                 console.log(str)
