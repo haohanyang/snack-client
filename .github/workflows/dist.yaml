@@ -1,4 +1,4 @@
-name: Create a dist.zip artifact
+name: Build and create a zip artifact
 
 on:
   push:
@@ -35,11 +35,9 @@ jobs:
         COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
         COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
     - name: Build
-      run: | 
-        npm run build
-        zip dist.zip dist/* dist/assets/*
+      run: npm run build
     - name: Upload the artifact
       uses: actions/upload-artifact@v3
       with:
         name: dist
-        path: dist.zip
+        path: dist
