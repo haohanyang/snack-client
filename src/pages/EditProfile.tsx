@@ -59,7 +59,9 @@ export default function EditProfile({ userId }: EditProfileProps) {
                 })
                 const session = await Auth.currentSession()
                 const token = session.getIdToken().getJwtToken()
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files`, {
+                const fileUrl = process.env.NODE_ENV === "development" ?
+                    `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1/files` : "/api/v1/files"
+                const response = await fetch(fileUrl, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -108,7 +110,9 @@ export default function EditProfile({ userId }: EditProfileProps) {
                 })
                 const session = await Auth.currentSession()
                 const token = session.getIdToken().getJwtToken()
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files`, {
+                const fileUrl = process.env.NODE_ENV === "development" ?
+                    `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1/files` : "/api/v1/files"
+                const response = await fetch(fileUrl, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,

@@ -40,6 +40,9 @@ const Chat = ({ userId }: ChatProps) => {
     const fileRef = useRef<HTMLInputElement>(null)
     const [sendChannelMessage, { isLoading }] = useSendChannelMessageMutation()
 
+    const fileUrl = process.env.NODE_ENV === "development" ?
+        `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1/files` : "/api/v1/files"
+
     const takePhoto = async () => {
         const photo = await Camera.getPhoto({
             resultType: CameraResultType.Uri,
@@ -67,7 +70,7 @@ const Chat = ({ userId }: ChatProps) => {
                 const formData = new FormData()
                 formData.append("file", blob)
 
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files`, {
+                const response = await fetch(fileUrl, {
                     method: "POST",
                     body: formData,
                     headers: {
@@ -128,7 +131,7 @@ const Chat = ({ userId }: ChatProps) => {
                 const formData = new FormData()
                 formData.append("file", file)
 
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files`, {
+                const response = await fetch(fileUrl, {
                     method: "POST",
                     body: formData,
                     headers: {
