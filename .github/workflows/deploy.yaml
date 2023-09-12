@@ -1,10 +1,10 @@
-name: Build and create a zip artifact
+name: Build and deploy to Netlify
 
 on:
   push:
     branches: [ "master" ]
     paths:
-      - .github/workflows/dist.yaml
+      - .github/workflows/deploy.yaml
       - src/components/**
       - src/model/**
       - src/pages/**
@@ -40,3 +40,10 @@ jobs:
       with:
         name: dist
         path: dist
+    - name: Deploy to Netlify
+      uses: netlify/actions/cli@master
+      with:
+        args: deploy --dir=dist --prod
+      env:
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
