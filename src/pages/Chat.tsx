@@ -15,12 +15,13 @@ import { GroupChannelStatus, UserChannelStatus } from "../components/ContactStat
 import { Formik } from "formik"
 import { MessageRequest } from "../models/message"
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera"
-import { FileUploadResult } from "../models/file"
+import { FileUploadResult, PreSignedUrlResult } from "../models/file"
 import { Auth } from "aws-amplify"
 import LoadingPage from "./LoadingPage"
 import ErrorPage from "./ErrorPage"
 import NotFound from "./NotFound"
 import './Chat.css'
+import { getApiUrl } from "../utils"
 
 interface ChatProps {
     userId: string | null
@@ -40,19 +41,22 @@ const Chat = ({ userId }: ChatProps) => {
     const fileRef = useRef<HTMLInputElement>(null)
     const [sendChannelMessage, { isLoading }] = useSendChannelMessageMutation()
 
-    const fileUrl = process.env.NODE_ENV === "development" ?
-        `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1/files` : "/api/v1/files"
-
     const takePhoto = async () => {
         const photo = await Camera.getPhoto({
-            resultType: CameraResultType.Uri,
-            source: CameraSource.Photos,
-            quality: 100
+            resultType: CameraResultType.DataUrl,
+            source: CameraSource.Camera,
+            quality: 100,
         })
 
-        if (userId && photo.webPath && !isLoading) {
-            const response = await fetch(photo.webPath)
-            const blob = await response.blob()
+        if (userId && photo.dataUrl && !isLoading) {
+            const binary = atob(photo.dataUrl.split(",")[1])
+            const array = []
+            for (let i = 0; i < binary.length; i++) {
+                array.push(binary.charCodeAt(i))
+            }
+
+            const blob = new Blob([new Uint8Array(array)], { type: 'image/jpeg' })
+
             if (blob.size > 10 * 1024 * 1024) {
                 presentToast({
                     message: "File size must be less than 10MB",
@@ -67,29 +71,52 @@ const Chat = ({ userId }: ChatProps) => {
                 })
                 const session = await Auth.currentSession()
                 const token = session.getIdToken().getJwtToken()
-                const formData = new FormData()
-                formData.append("file", blob)
 
-                const response = await fetch(fileUrl, {
+                // Get presigned url
+                const urlRequestResponse = await fetch(getApiUrl("/presigned-url"), {
                     method: "POST",
-                    body: formData,
+                    body: JSON.stringify({
+                        "contentType": "image/jpeg"
+                    }),
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
                 })
 
-                if (response.ok) {
-                    const result: FileUploadResult = await response.json()
-                    const messageRequest: MessageRequest = {
-                        channel: channel!,
-                        content: `image.${photo.format}`,
-                        authorId: userId,
-                        fileUploadResult: result,
+                if (!urlRequestResponse.ok) {
+                    throw new Error("Failed to get presigned url")
+                }
+
+                const urlRequestResult: PreSignedUrlResult = await urlRequestResponse.json()
+
+                const response = await fetch(urlRequestResult.url, {
+                    method: "PUT",
+                    body: blob,
+                    headers: {
+                        "x-amz-meta-uploader": userId,
                     }
-                    await sendChannelMessage(messageRequest).unwrap()
-                } else {
+                })
+
+                if (!response.ok) {
                     throw new Error("Failed to upload the photo")
                 }
+
+                const result: FileUploadResult = {
+                    bucket: urlRequestResult.bucket,
+                    key: urlRequestResult.key,
+                    contentType: "image/jpeg",
+                    size: blob.size,
+                    fileName: "image.jpeg",
+                    uri: ""
+                }
+                const messageRequest: MessageRequest = {
+                    channel: channel!,
+                    content: "image.jpeg",
+                    authorId: userId,
+                    fileUploadResult: result,
+                }
+                await sendChannelMessage(messageRequest).unwrap()
+
             } catch (error) {
                 console.log(error)
                 presentToast({
@@ -105,9 +132,9 @@ const Chat = ({ userId }: ChatProps) => {
 
     const uploadFile = async (file: File) => {
         if (userId && !isLoading) {
-            if (file.name.length > 80) {
+            if (file.name.length > 500) {
                 presentToast({
-                    message: "File name must be less than 80 characters",
+                    message: "File name must not be more than 500 characters",
                     color: "danger",
                     duration: 3000,
                 })
@@ -122,45 +149,93 @@ const Chat = ({ userId }: ChatProps) => {
                 })
                 return
             }
-            try {
-                presentLoading({
-                    message: "Uploading the file",
-                })
-                const session = await Auth.currentSession()
-                const token = session.getIdToken().getJwtToken()
-                const formData = new FormData()
-                formData.append("file", file)
 
-                const response = await fetch(fileUrl, {
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                })
+            const reader = new FileReader()
+            reader.onload = async () => {
+                if (reader.result) {
+                    try {
+                        presentLoading({
+                            message: "Uploading the file",
+                        })
+                        const session = await Auth.currentSession()
+                        const token = session.getIdToken().getJwtToken()
 
-                if (response.ok) {
-                    const result: FileUploadResult = await response.json()
-                    const messageRequest: MessageRequest = {
-                        channel: channel!,
-                        content: file.name,
-                        authorId: userId,
-                        fileUploadResult: result,
+                        const readerResult = reader.result as string
+                        const binary = atob(readerResult.split(',')[1])
+                        const array = []
+                        for (let i = 0; i < binary.length; i++) {
+                            array.push(binary.charCodeAt(i))
+                        }
+                        const blob = new Blob([new Uint8Array(array)], { type: file.type })
+
+                        // Get presigned url
+                        const urlRequestResponse = await fetch(getApiUrl("/presigned-url"), {
+                            method: "POST",
+                            body: JSON.stringify({
+                                "contentType": file.type
+                            }),
+                            headers: {
+                                "Authorization": `Bearer ${token}`
+                            }
+                        })
+
+                        if (!urlRequestResponse.ok) {
+                            throw new Error("Failed to get presigned url")
+                        }
+
+                        const urlRequestResult: PreSignedUrlResult = await urlRequestResponse.json()
+
+                        const uploadResponse = await fetch(urlRequestResult.url, {
+                            method: "PUT",
+                            body: blob,
+                            headers: {
+                                "x-amz-meta-uploader": userId,
+                            }
+                        })
+
+                        if (!uploadResponse.ok) {
+                            throw new Error("Failed to upload the photo")
+                        }
+
+                        const uploadResult: FileUploadResult = {
+                            bucket: urlRequestResult.bucket,
+                            key: urlRequestResult.key,
+                            contentType: file.type,
+                            size: blob.size,
+                            fileName: file.name,
+                            uri: ""
+                        }
+
+                        const messageRequest: MessageRequest = {
+                            channel: channel!,
+                            content: file.name,
+                            authorId: userId,
+                            fileUploadResult: uploadResult,
+                        }
+                        await sendChannelMessage(messageRequest).unwrap()
+                    } catch (error) {
+                        console.log(error)
+                        presentToast({
+                            message: "Failed to upload the file, please try again later",
+                            color: "danger",
+                            duration: 3000,
+                        })
+                    } finally {
+                        dismissLoading()
                     }
-                    await sendChannelMessage(messageRequest).unwrap()
-                } else {
-                    throw new Error("Failed to upload the file")
                 }
-            } catch (error) {
-                console.log(error)
+            }
+
+            reader.onerror = () => {
                 presentToast({
-                    message: "Failed to upload the file, please try again later",
+                    message: "Failed to read the file",
                     color: "danger",
                     duration: 3000,
                 })
-            } finally {
-                dismissLoading()
+                throw new Error("Failed to read the file")
             }
+
+            reader.readAsDataURL(file)
         }
     }
 
@@ -249,7 +324,7 @@ const Chat = ({ userId }: ChatProps) => {
                                 <IonItem className="message-toolbar">
                                     <IonInput type="text" name="text" placeholder="Message"
                                         onIonChange={handleChange} onBlur={handleBlur}
-                                        value={values.text} className="bg-white"></IonInput>
+                                        value={values.text} className="bg-white" disabled={isSubmitting}></IonInput>
                                     <IonButtons slot="end" className="ml-0">
                                         <input type="file" className="border-solid" accept=".pdf,*.txt" hidden ref={fileRef} onChange={e => {
                                             if (e.target.files && e.target.files.length > 0) {

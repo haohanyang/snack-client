@@ -20,3 +20,10 @@ export interface AttachmentDto {
     filename: string
     contentType: string
 }
+
+export interface PreSignedUrlResult {
+    url: string
+    bucket: string
+    key: string
+    fileUrl: string
+}

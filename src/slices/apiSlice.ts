@@ -5,15 +5,12 @@ import { ChannelInfo, ChannelType, Channels, GroupChannel, GroupChannelRequest, 
 import { Message, MessageRequest } from "../models/message"
 import Membership from "../models/membership"
 import { Client } from "@stomp/stompjs"
+import { getApiUrl, getBrokerUrl } from "../utils"
 
 export const apiSlice = createApi({
     reducerPath: "api",
     baseQuery: fetchBaseQuery({
-        // In dev environment, server backend server is running on a remote server
-        // In prod environment, backend server is running on the same server as the frontend
-        // so use relative path
-        baseUrl: process.env.NODE_ENV === "development" ?
-            `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1` : "/api/v1",
+        baseUrl: getApiUrl(""),
         prepareHeaders: async (headers) => {
             const token = (await Auth.currentSession()).getIdToken().getJwtToken()
             if (token) {
@@ -36,22 +33,8 @@ export const apiSlice = createApi({
                     const { data: me } = await cacheDataLoaded
                     const jwt = (await Auth.currentSession()).getIdToken().getJwtToken()
 
-                    let brokerUrl = ""
-
-                    if (process.env.NODE_ENV === "development") {
-                        brokerUrl = `ws://${import.meta.env.VITE_SERVER_ADDRESS}/ws`
-                    } else {
-                        const location = window.location
-                        if (location.protocol === "https:") {
-                            brokerUrl = "wss:"
-                        } else {
-                            brokerUrl = "ws:"
-                        }
-                        brokerUrl += "//" + location.host + "/ws"
-                    }
-
                     stomp = new Client({
-                        brokerURL: brokerUrl,
+                        brokerURL: getBrokerUrl(),
                         debug: str => {
                             if (process.env.NODE_ENV === "development") {
                                 console.log(str)

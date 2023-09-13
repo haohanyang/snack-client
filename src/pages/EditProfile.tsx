@@ -10,11 +10,12 @@ import { useGetMeQuery, useUpdateMeMutation } from "../slices/apiSlice"
 import { UpdateProfileRequest } from "../models/user"
 import ErrorMessage from "../components/ErrorMessage"
 import Loader from "../components/Loader"
-import { FileUploadResult } from "../models/file"
+import { FileUploadResult, PreSignedUrlResult } from "../models/file"
 import LoadingPage from "./LoadingPage"
 import ErrorPage from "./ErrorPage"
 import { Auth } from "aws-amplify"
 import { Redirect } from "react-router"
+import { getApiUrl } from "../utils"
 
 interface EditProfileProps {
     userId: string | null
@@ -40,9 +41,10 @@ export default function EditProfile({ userId }: EditProfileProps) {
     const [presentToast] = useIonToast()
     const [presentLoading, dismissLoading] = useIonLoading()
     const [updateProfile, { isLoading }] = useUpdateMeMutation()
-    const uploadBackgroundImage = async (backgroundFile: File, setBackgroundImage: (url: string) => void) => {
-        if (me) {
-            if (backgroundFile.size > 1024 * 1024 * 10) {
+
+    const uploadImage = async (image: File, callBack: (uploadResult: FileUploadResult) => void) => {
+        if (me && userId) {
+            if (image.size > 1024 * 1024 * 10) {
                 presentToast({
                     message: "Maximum image size is 10MB",
                     color: "danger",
@@ -50,95 +52,83 @@ export default function EditProfile({ userId }: EditProfileProps) {
                 })
                 return
             }
-            const form = new FormData()
-            form.append("file", backgroundFile)
+            const reader = new FileReader()
 
-            try {
-                presentLoading({
-                    message: "Uploading background image",
-                })
-                const session = await Auth.currentSession()
-                const token = session.getIdToken().getJwtToken()
-                const fileUrl = process.env.NODE_ENV === "development" ?
-                    `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1/files` : "/api/v1/files"
-                const response = await fetch(fileUrl, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    body: form,
-                })
-                if (response.ok) {
-                    const result: FileUploadResult = await response.json()
-                    setBackgroundImage(result.uri)
-                    setBackgroundUploadResult(result)
-                } else {
+            reader.onloadend = async () => {
+                try {
+                    presentLoading({
+                        message: "Uploading the image",
+                    })
+
+                    // Get the JWT token
+                    const session = await Auth.currentSession()
+                    const token = session.getIdToken().getJwtToken()
+
+                    // Convert the image to binary
+                    const readerResult = reader.result as string
+                    const binary = atob(readerResult.split(',')[1])
+                    const array = []
+                    for (let i = 0; i < binary.length; i++) {
+                        array.push(binary.charCodeAt(i))
+                    }
+                    const blob = new Blob([new Uint8Array(array)], { type: image.type })
+
+                    // Get presigned url
+                    const urlRequestResponse = await fetch(getApiUrl("/presigned-url"), {
+                        method: "POST",
+                        body: JSON.stringify({
+                            "contentType": image.type,
+                        }),
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                        },
+                    })
+
+                    if (!urlRequestResponse.ok) {
+                        throw new Error("Failed to upload the image")
+                    }
+
+                    const urlRequestResult: PreSignedUrlResult = await urlRequestResponse.json()
+                    const uploadResponse = await fetch(urlRequestResult.url, {
+                        method: "PUT",
+                        body: blob,
+                        headers: {
+                            "x-amz-meta-uploader": userId
+                        },
+                    })
+
+                    if (!uploadResponse.ok) {
+                        throw new Error("Failed to upload the image")
+                    }
+
+                    callBack(
+                        {
+                            bucket: urlRequestResult.bucket,
+                            key: urlRequestResult.key,
+                            contentType: image.type,
+                            size: blob.size,
+                            fileName: image.name,
+                            uri: urlRequestResult.fileUrl,
+                        }
+                    )
+                } catch (error) {
                     presentToast({
-                        message: "Failed to upload the background image, please try again later",
+                        message: "Failed to upload the image, please try again later",
                         color: "danger",
                         duration: 1500,
                     })
+                } finally {
+                    dismissLoading()
                 }
-            } catch (error) {
+            }
+            reader.onerror = () => {
                 presentToast({
-                    message: "Failed to upload the background image, please try again later",
+                    message: "Failed to read the image, please try again later",
                     color: "danger",
                     duration: 1500,
                 })
-            } finally {
-                dismissLoading()
             }
-        }
-    }
-
-    const uploadAvatar = async (avatarFile: File, setAvatar: (url: string) => void) => {
-        if (me) {
-            if (avatarFile.size > 1024 * 1024 * 10) {
-                presentToast({
-                    message: "Maximum image size is 10MB",
-                    color: "danger",
-                    duration: 1500,
-                })
-                return
-            }
-            const form = new FormData()
-            form.append("file", avatarFile)
-
-            try {
-                presentLoading({
-                    message: "Uploading the avatar",
-                })
-                const session = await Auth.currentSession()
-                const token = session.getIdToken().getJwtToken()
-                const fileUrl = process.env.NODE_ENV === "development" ?
-                    `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1/files` : "/api/v1/files"
-                const response = await fetch(fileUrl, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    body: form,
-                })
-                if (response.ok) {
-                    const result: FileUploadResult = await response.json()
-                    setAvatar(result.uri)
-                    setAvatarUploadResult(result)
-                } else {
-                    presentToast({
-                        message: "Failed to upload the avatar, please try again later",
-                        color: "danger",
-                        duration: 1500,
-                    })
-                }
-            } catch (error) {
-                presentToast({
-                    message: "Failed to upload the avatar, please try again later",
-                    color: "danger",
-                    duration: 1500,
-                })
-            } finally {
-                dismissLoading()
-            }
+            reader.readAsDataURL(image)
         }
     }
 
@@ -257,8 +247,9 @@ export default function EditProfile({ userId }: EditProfileProps) {
                                                         Enter your name and add an optional profile and background pictures
                                                         <input type="file" hidden ref={avatarFileInputRef} onChange={e => {
                                                             if (e.target.files && e.target.files[0]) {
-                                                                uploadAvatar(e.target.files[0], (url) => {
-                                                                    setValues({ ...values, avatar: url })
+                                                                uploadImage(e.target.files[0], (uploadResult) => {
+                                                                    setValues({ ...values, avatar: uploadResult.uri })
+                                                                    setAvatarUploadResult(uploadResult)
                                                                 })
                                                             }
                                                         }} />
@@ -283,7 +274,10 @@ export default function EditProfile({ userId }: EditProfileProps) {
                                         <img src={values.backgroundImage} />
                                         <input type="file" accept="image/*" hidden ref={backgroundFileInputRef} onChange={e => {
                                             if (e.target.files && e.target.files[0]) {
-                                                uploadBackgroundImage(e.target.files[0], url => setValues({ ...values, backgroundImage: url }))
+                                                uploadImage(e.target.files[0], (uploadResult) => {
+                                                    setValues({ ...values, backgroundImage: uploadResult.uri })
+                                                    setBackgroundUploadResult(uploadResult)
+                                                })
                                             }
                                         }} />
                                     </IonCard>
