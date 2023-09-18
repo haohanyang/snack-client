@@ -1,8 +1,13 @@
 import { initializeApp } from 'firebase/app'
 import { getMessaging } from "firebase/messaging/sw"
+import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { pageCache, imageCache, staticResourceCache, googleFontsCache } from 'workbox-recipes'
 
 declare const self: ServiceWorkerGlobalScope
+
+cleanupOutdatedCaches()
+
+precacheAndRoute(self.__WB_MANIFEST)
 
 pageCache()
 
