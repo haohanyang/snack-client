@@ -17,7 +17,6 @@ export default function ChatList({ userId }: ChatListProps) {
     const sortedChannels = useMemo(() => {
         const userChannels: Channel[] = channels.userChannels.map((channel) => {
             const contact = channel.user1.id == userId ? channel.user2 : channel.user1
-            console.log(channel.unreadMessagesCount)
             return {
                 id: channel.id,
                 type: channel.type,
@@ -60,7 +59,7 @@ export default function ChatList({ userId }: ChatListProps) {
                     id={channel.id.toString()}
                     type={channel.type}
                     name={channel.name}
-                    key={"u" + channel.id}
+                    key={channel.type.toString() + channel.id.toString()}
                     image={channel.image}
                     unreadCount={channel.unreadMessagesCount}
                     message={channel.lastMessage ? channel.lastMessage.content : ""}

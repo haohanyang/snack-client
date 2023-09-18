@@ -48,7 +48,6 @@ function FriendList({ userId }: FriendListProps) {
                 </IonAvatar>
                 <IonLabel>
                     <h3 className="font-semibold">{friend.fullName}</h3>
-                    <p>{"@" + friend.username}</p>
                 </IonLabel>
             </IonItem>
         ))} </>

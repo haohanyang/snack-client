@@ -1,6 +1,6 @@
 import { Route, useLocation } from "react-router-dom"
 import {
-    IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact
+    IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonViewDidEnter
 } from "@ionic/react"
 import { chatbubble, people, settings } from "ionicons/icons"
 import Chats from "./pages/Chats"

@@ -4,8 +4,19 @@ import User, { UpdateProfileRequest } from "../models/user"
 import { ChannelInfo, ChannelType, Channels, GroupChannel, GroupChannelRequest, UserChannel, UserChannelRequest } from "../models/channel"
 import { Message, MessageRequest } from "../models/message"
 import Membership from "../models/membership"
-import { Client } from "@stomp/stompjs"
+import { Client, StompSubscription } from "@stomp/stompjs"
 import { getApiUrl, getBrokerUrl } from "../utils"
+
+let stomp: Client = new Client({
+    brokerURL: getBrokerUrl(),
+    debug: str => {
+        if (process.env.NODE_ENV === "development") {
+            console.log(str)
+        }
+    },
+})
+
+let subscription: StompSubscription | null = null
 
 export const apiSlice = createApi({
     reducerPath: "api",
@@ -25,90 +36,86 @@ export const apiSlice = createApi({
             query: () => "users/@me/profile",
             providesTags: ["Me"],
             async onCacheEntryAdded(
-                arg,
+                _arg,
                 { cacheDataLoaded, cacheEntryRemoved, dispatch }
             ) {
-                let stomp: Client | null = null
-                try {
-                    const { data: me } = await cacheDataLoaded
-                    const jwt = (await Auth.currentSession()).getIdToken().getJwtToken()
+                if (!stomp.connected) {
+                    try {
+                        const { data: me } = await cacheDataLoaded
+                        const jwt = (await Auth.currentSession()).getIdToken().getJwtToken()
 
-                    stomp = new Client({
-                        brokerURL: getBrokerUrl(),
-                        debug: str => {
-                            if (process.env.NODE_ENV === "development") {
-                                console.log(str)
-                            }
-                        },
-                        connectHeaders: {
+                        stomp.connectHeaders = {
                             Authorization: jwt
                         }
-                    })
-                    stomp.onConnect = _frame => {
-                        console.log("Connected to websocket")
-                        stomp!.subscribe(`/gateway/${me.id}`, packet => {
-                            const message: Message = JSON.parse(packet.body)
 
-                            if (process.env.NODE_ENV === "development") {
-                                console.log("Received message: ", message)
-                            }
+                        stomp.onConnect = _frame => {
+                            console.log("Connected to websocket")
+                            if (!subscription) {
+                                subscription = stomp.subscribe(`/gateway/${me.id}`, packet => {
+                                    const message: Message = JSON.parse(packet.body)
 
-                            // Don"t notify if the message is sent by me
-                            if (message.author.id === me.id) {
-                                return
-                            }
+                                    if (process.env.NODE_ENV === "development") {
+                                        console.log("Received message: ", message)
+                                    }
 
-                            // Update message list
-                            dispatch(apiSlice.util.updateQueryData("getChannelMessages", message.channel, draft => {
-                                draft.push(message)
-                            }))
-                            // Update channel list
-                            dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
-                                if (message.channel.type == ChannelType.USER) {
-                                    const channel = draft.userChannels.find(channel => channel.id == message.channel.id)
-                                    if (channel) {
-                                        channel.lastMessage = message
-                                        channel.lastUpdated = message.createdAt
-                                        channel.unreadMessagesCount += 1
-                                    } else {
-                                        dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
-                                            const userChannel: UserChannel = {
-                                                id: message.channel.id,
-                                                user1: message.author.id < me.id ? message.author : me,
-                                                user2: message.author.id < me.id ? me : message.author,
-                                                lastMessage: message,
-                                                lastUpdated: new Date(message.createdAt).toISOString(),
-                                                unreadMessagesCount: 1,
-                                                type: ChannelType.USER
+                                    // Don't notify if the message is sent by me
+                                    if (message.author.id === me.id) {
+                                        return
+                                    }
+
+                                    // Update message list
+                                    dispatch(apiSlice.util.updateQueryData("getChannelMessages", message.channel, draft => {
+                                        draft.push(message)
+                                    }))
+                                    // Update channel list
+                                    dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
+                                        if (message.channel.type == ChannelType.USER) {
+                                            const channel = draft.userChannels.find(channel => channel.id == message.channel.id)
+                                            if (channel) {
+                                                channel.lastMessage = message
+                                                channel.lastUpdated = message.createdAt
+                                                channel.unreadMessagesCount += 1
+                                            } else {
+                                                dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
+                                                    const userChannel: UserChannel = {
+                                                        id: message.channel.id,
+                                                        user1: message.author.id < me.id ? message.author : me,
+                                                        user2: message.author.id < me.id ? me : message.author,
+                                                        lastMessage: message,
+                                                        lastUpdated: new Date(message.createdAt).toISOString(),
+                                                        unreadMessagesCount: 1,
+                                                        type: ChannelType.USER
+                                                    }
+                                                    draft.userChannels.push(userChannel)
+                                                }))
                                             }
-                                            draft.userChannels.push(userChannel)
-                                        }))
-                                    }
-                                } else {
-                                    const channel = draft.groupChannels.find(channel => channel.id == message.channel.id)
-                                    if (channel) {
-                                        channel.lastMessage = message
-                                        channel.lastUpdated = message.createdAt
-                                        channel.unreadMessagesCount++
-                                    } else {
-                                        // TODO: get group channel info
-                                        dispatch(apiSlice.util.invalidateTags(["NavChannels"]))
-                                    }
-                                }
-                            }))
-                        })
+                                        } else {
+                                            const channel = draft.groupChannels.find(channel => channel.id == message.channel.id)
+                                            if (channel) {
+                                                channel.lastMessage = message
+                                                channel.lastUpdated = message.createdAt
+                                                channel.unreadMessagesCount++
+                                            } else {
+                                                // TODO: get group channel info
+                                                dispatch(apiSlice.util.invalidateTags(["NavChannels"]))
+                                            }
+                                        }
+                                    }))
+                                })
+                            }
+                        }
+                        stomp.activate()
+                    } catch (error) {
+                        console.error(error)
                     }
-                    stomp.activate()
-                } catch (error) {
-                    console.error(error)
+                    await cacheEntryRemoved
+                    stomp?.deactivate()
                 }
-                await cacheEntryRemoved
-                stomp?.deactivate()
             }
         }),
         updateMe: builder.mutation<User, UpdateProfileRequest>({
             query: (request: UpdateProfileRequest) => ({
-                url: "users/@me",
+                url: "users/@me/profile",
                 method: "PATCH",
                 body: request,
             }),
@@ -239,7 +246,6 @@ export const apiSlice = createApi({
                 } catch (error) {
                     console.error(error)
                 }
-
             },
         }),
     }),

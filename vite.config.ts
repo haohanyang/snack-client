@@ -1,7 +1,7 @@
 import legacy from "@vitejs/plugin-legacy"
 import react from "@vitejs/plugin-react"
 import { UserConfig, defineConfig } from "vite"
-import { VitePWA } from "vite-plugin-pwa"
+import { VitePWA } from 'vite-plugin-pwa'
 
 let config: UserConfig = {
     server: {
@@ -12,7 +12,7 @@ let config: UserConfig = {
         legacy(),
         VitePWA({
             manifest: {
-                name: "snack",
+                name: process.env.NODE_ENV === "development" ? "Snack Test" : "Snack",
                 short_name: "snack",
                 icons: [
                     {
@@ -28,7 +28,7 @@ let config: UserConfig = {
                 display: "standalone",
             },
             filename: "sw.ts",
-            injectRegister: false,
+            injectRegister: "auto",
             srcDir: "src",
             strategies: "injectManifest",
             devOptions: {

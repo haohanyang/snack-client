@@ -17,7 +17,7 @@ export default function ChatItem({ id, name, type, message, image, unreadCount }
         </IonAvatar>
         <IonLabel>
             <h3 className="font-semibold">{name}</h3>
-            <p>{message ? message + unreadCount : <span>&#8203;</span>}</p>
+            <p>{message ? message : <span>&#8203;</span>}</p>
         </IonLabel>
         {unreadCount > 0 && <IonBadge slot="end">{unreadCount}</IonBadge>}
     </IonItem>

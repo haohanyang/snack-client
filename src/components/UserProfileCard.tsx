@@ -16,7 +16,6 @@ const UserProfileCard = ({ userId }: UserProfileCardProps) => {
                     </IonThumbnail>
                     <IonLabel>
                         <h3 className="font-semibold text-lg">{me!.fullName}</h3>
-                        <p>{"@" + me!.username}</p>
                         <p>{me!.bio}</p>
                     </IonLabel>
                 </IonItem>)}

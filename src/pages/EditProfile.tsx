@@ -93,7 +93,7 @@ export default function EditProfile({ userId }: EditProfileProps) {
                         method: "PUT",
                         body: blob,
                         headers: {
-                            "x-amz-meta-uploader": userId
+                            "x-amz-meta-user": userId
                         },
                     })
 
@@ -244,7 +244,7 @@ export default function EditProfile({ userId }: EditProfileProps) {
                                                 </IonButton>
                                                 <IonLabel className="ion-text-wrap">
                                                     <p>
-                                                        Enter your name and add an optional profile and background pictures
+                                                        Enter your name and add an optional profile and background picture
                                                         <input type="file" hidden ref={avatarFileInputRef} onChange={e => {
                                                             if (e.target.files && e.target.files[0]) {
                                                                 uploadImage(e.target.files[0], (uploadResult) => {
@@ -265,7 +265,7 @@ export default function EditProfile({ userId }: EditProfileProps) {
                                                     value={values.fullName}></IonInput>
                                             </IonItem>
                                             <IonItem>
-                                                <IonInput value={"@" + me.username} disabled></IonInput>
+                                                <IonInput value={me.email} disabled></IonInput>
                                             </IonItem>
                                         </IonCardContent>
                                     </IonCard>

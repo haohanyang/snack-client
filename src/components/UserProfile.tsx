@@ -28,12 +28,6 @@ function UserProfile({ user }: UserProfileProps) {
                 <IonCardContent className="p-0">
                     <IonList>
                         <IonItem lines="none">
-                            <IonLabel className="my-0">
-                                <p><small>username</small></p>
-                                {"@" + user.username}
-                            </IonLabel>
-                        </IonItem>
-                        <IonItem lines="none">
                             <IonLabel className="ion-text-wrap my-0">
                                 <p><small>bio</small></p>
                                 {user.bio}

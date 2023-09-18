@@ -15,7 +15,7 @@ const Home = ({ userId, setUserId }: HomeProps) => {
 
     const signIn = async (email: string, password: string) => {
         const user = await Auth.signIn(email, password)
-        setUserId(user.username)
+        setUserId(user.attributes.sub)
         router.push("/chats")
     }
 
@@ -41,7 +41,7 @@ const Home = ({ userId, setUserId }: HomeProps) => {
                     </IonToolbar>
                 </IonHeader>
                 <IonItem lines="none">
-                    <p>Don"t have an account? <IonRouterLink routerLink="/register">Register</IonRouterLink></p>
+                    <p>Don't have an account? <IonRouterLink routerLink="/register">Register</IonRouterLink></p>
                 </IonItem>
                 <SignInForm signIn={signIn} />
             </IonContent>

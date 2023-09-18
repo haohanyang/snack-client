@@ -16,7 +16,8 @@ export function TextMessageItem({ userId, message }: MessageItemProps) {
         <IonCard color={message.author.id === userId ? "primary" : "light"} button
             className={"inline-block" + (message.author.id === userId ? " ml-auto mr-0" : "")}>
             <IonCardContent className="px-2 py-1">
-                {message.author.id !== userId && < p ><strong>{message.author.fullName}</strong> <small> {"@" + message.author.username}</small> </p>}
+                {message.author.id !== userId &&
+                    < p ><strong>{message.author.fullName}</strong> </p>}
                 <p>{message.content}</p>
                 <p><small>{moment(message.createdAt).format("h:mm a")}</small></p>
             </IonCardContent>
@@ -32,7 +33,7 @@ export function AttachmentMessageItem({ userId, message }: MessageItemProps) {
         <IonCard color={message.author.id === userId ? "primary" : "light"} button
             className={"inline-block max-w-sm" + (message.author.id === userId ? " ml-auto mr-0" : "")}>
             <IonCardContent className="px-2 py-1">
-                {message.author.id !== userId && < p ><strong>{message.author.fullName}</strong> <small> @{message.author.username}</small> </p>}
+                {message.author.id !== userId && < p ><strong>{message.author.fullName}</strong> </p>}
                 {message.attachment!.contentType.startsWith("image") ? <img src={message.attachment!.url} />
                     : <IonChip>
                         <i className={message.attachment!.contentType == "application/pdf" ? "fa-solid fa-file-pdf" : "fa-solid fa-file-pdf"}></i>
