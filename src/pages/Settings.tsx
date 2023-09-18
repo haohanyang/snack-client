@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
     IonAlert, IonBackButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonItem,
     IonPage,
@@ -38,6 +38,7 @@ export default function Settings({ userId, setUserId }: SettingsProps) {
                     vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
                     serviceWorkerRegistration: registration,
                 })
+
                 if (currentToken) {
                     // Send token to server
                     if (process.env.NODE_ENV === "development") {

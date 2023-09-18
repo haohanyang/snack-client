@@ -27,7 +27,7 @@ jobs:
     - name: Set up environment variables
       run: | 
         echo "VITE_APP_TITLE=snack" > .env
-        echo "VITE_SERVER_ADDRESS=$SERVER_ADDRESS" >> .env
+        echo "VITE_SERVER_ADDRESS=" >> .env
         echo "VITE_COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID" >> .env
         echo "VITE_COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID" >> .env
         echo "VITE_FIREBASE_APIKEY=$FIREBASE_APIKEY" >> .env
@@ -36,9 +36,8 @@ jobs:
         echo "VITE_FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID" >> .env
         echo "VITE_FIREBASE_VAPID_KEY=$FIREBASE_VAPID_KEY" >> .env
       env:
-        COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_DEV_USER_POOL_ID }}
-        COGNITO_CLIENT_ID: ${{ secrets.COGNITO_DEV_CLIENT_ID }}
-        SERVER_ADDRESS: ${{ secrets.SERVER_ADDRESS }}
+        COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+        COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
         FIREBASE_APIKEY: ${{ secrets.FIREBASE_APIKEY }}
         FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
         FIREBASE_MSG_SENDER_ID: ${{ secrets.FIREBASE_MSG_SENDER_ID }}
