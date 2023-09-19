@@ -6,17 +6,15 @@ import { ConfirmSignUpForm } from "../components/ConfirmSignUpForm"
 
 const Home: React.FC = () => {
 
-    const router = useIonRouter()
     const [signUpState, setSignUpState] = useState<"initial" | "confirmSignUp">("initial")
     const [confirmDestination, setConfirmDestination] = useState<string>("")
     const [userId, setUserId] = useState<string>("")
 
-    const signUp = async (email: string, username: string, fullName: string, password: string) => {
+    const signUp = async (email: string, fullName: string, password: string) => {
         const result = await Auth.signUp({
             username: email,
             password: password,
             attributes: {
-                preferred_username: username,
                 name: fullName
             }
         })
@@ -30,7 +28,6 @@ const Home: React.FC = () => {
 
     const confirmSignUp = async (code: string) => {
         await Auth.confirmSignUp(userId, code)
-        router.push("/?registered=true")
     }
 
     return (

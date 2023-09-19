@@ -2,7 +2,7 @@ import { FileUploadResult } from "./file"
 
 export default interface User {
     id: string
-    username: string
+    email: string | null
     fullName: string
     avatar: string
     backgroundImage: string

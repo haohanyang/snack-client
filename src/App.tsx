@@ -1,6 +1,6 @@
-import { Route, useLocation } from "react-router-dom"
+import { Redirect, Route, useLocation } from "react-router-dom"
 import {
-    IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact
+    IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonViewDidEnter
 } from "@ionic/react"
 import { chatbubble, people, settings } from "ionicons/icons"
 import Chats from "./pages/Chats"
@@ -31,7 +31,7 @@ import EditProfile from "./pages/EditProfile"
 import Home from "./pages/Home"
 import Register from "./pages/Register"
 import ErrorPage from "./pages/ErrorPage"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Auth } from "aws-amplify"
 import NotFound from "./pages/NotFound"
 import { useGetMeQuery } from "./slices/apiSlice"
@@ -98,8 +98,7 @@ const App: React.FC = () => {
             <Route exact path="/error">
                 <ErrorPage />
             </Route>
-            <Route>
-                <NotFound />
+            <Route component={NotFound}>
             </Route>
         </IonRouterOutlet>
         <IonTabBar slot="bottom" id="tab-bar">

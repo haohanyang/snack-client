@@ -6,12 +6,22 @@ import App from './App'
 import store from './store'
 import { IonApp } from '@ionic/react'
 import { IonReactRouter } from '@ionic/react-router'
+import { initializeApp } from "firebase/app"
 
 Amplify.configure({
     aws_cognito_region: "eu-north-1",
     aws_user_pools_id: import.meta.env.VITE_COGNITO_USER_POOL_ID,
     aws_user_pools_web_client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
 })
+
+const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MSG_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+}
+
+initializeApp(firebaseConfig)
 
 const container = document.getElementById('root')
 const root = createRoot(container!)
@@ -27,10 +37,3 @@ root.render(
         </Provider>
     </React.StrictMode>
 )
-
-// install service worker
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-    })
-}

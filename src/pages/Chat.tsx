@@ -44,7 +44,7 @@ const Chat = ({ userId }: ChatProps) => {
     const takePhoto = async () => {
         const photo = await Camera.getPhoto({
             resultType: CameraResultType.DataUrl,
-            source: CameraSource.Camera,
+            source: CameraSource.Photos,
             quality: 100,
         })
 
@@ -93,7 +93,7 @@ const Chat = ({ userId }: ChatProps) => {
                     method: "PUT",
                     body: blob,
                     headers: {
-                        "x-amz-meta-uploader": userId,
+                        "x-amz-meta-user": userId,
                     }
                 })
 
@@ -132,9 +132,9 @@ const Chat = ({ userId }: ChatProps) => {
 
     const uploadFile = async (file: File) => {
         if (userId && !isLoading) {
-            if (file.name.length > 500) {
+            if (file.name.length > 100) {
                 presentToast({
-                    message: "File name must not be more than 500 characters",
+                    message: "File name must not be more than 100 characters",
                     color: "danger",
                     duration: 3000,
                 })
@@ -189,7 +189,7 @@ const Chat = ({ userId }: ChatProps) => {
                             method: "PUT",
                             body: blob,
                             headers: {
-                                "x-amz-meta-uploader": userId,
+                                "x-amz-meta-user": userId,
                             }
                         })
 

@@ -1,13 +1,13 @@
 {
   "name": "snack-client",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite --no-open",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint",
-    "host": "vite --host"
+    "host": "vite --host 0.0.0.0"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^5.1.0",
@@ -26,6 +26,7 @@
     "@stomp/stompjs": "^7.0.0",
     "@types/react-dom": "^18.2.0",
     "aws-amplify": "^5.3.7",
+    "firebase": "^10.3.1",
     "formik": "^2.4.3",
     "ionicons": "^7.0.0",
     "moment": "^2.29.4",
@@ -52,6 +53,7 @@
     "vite-plugin-pwa": "^0.16.5",
     "workbox-core": "^7.0.0",
     "workbox-precaching": "^7.0.0",
+    "workbox-recipes": "^7.0.0",
     "workbox-routing": "^7.0.0"
   },
   "description": "PWA client for snack app"

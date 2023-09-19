@@ -1,6 +1,8 @@
-import { IonButton, IonCard, IonCardContent, IonInput, IonItem, IonLabel, IonSpinner } from "@ionic/react"
+import { IonButton, IonInput, IonItem, IonLabel, IonSpinner, useIonRouter } from "@ionic/react"
 import { Formik } from "formik"
 import { useState } from "react"
+import ErrorMessage from "./ErrorMessage"
+import SuccessMessage from "./SuccessMessage"
 
 interface ConfirmSignUpFormProps {
     confirmSignUp: (code: string) => Promise<void>
@@ -8,6 +10,8 @@ interface ConfirmSignUpFormProps {
 
 export const ConfirmSignUpForm = ({ confirmSignUp }: ConfirmSignUpFormProps) => {
 
+    const router = useIonRouter()
+    const [success, setSuccess] = useState<boolean>(false)
     const [error, setError] = useState<string>("")
 
     return <Formik
@@ -20,14 +24,20 @@ export const ConfirmSignUpForm = ({ confirmSignUp }: ConfirmSignUpFormProps) => 
             return errors
         }}
 
-        onSubmit={async (values, { setSubmitting }) => {
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
             setError("")
             setSubmitting(true)
             try {
                 await confirmSignUp(values.code)
+                setSuccess(true)
+                setTimeout(() => {
+                    setError("")
+                    setSuccess(false)
+                    resetForm()
+                    router.push("/")
+                }, 3000)
             } catch (error: any) {
                 console.log(error)
-
                 if (error.message) {
                     setError(error.message)
                 }
@@ -63,11 +73,8 @@ export const ConfirmSignUpForm = ({ confirmSignUp }: ConfirmSignUpFormProps) => 
                     {isSubmitting ? <IonSpinner className="ion-margin-horizontal" /> : <IonLabel>Verify</IonLabel>}
                 </IonButton>
 
-                {error && <IonCard className="ion-margin-top ion-margin-horizontal" color="danger">
-                    <IonCardContent>
-                        {error}
-                    </IonCardContent>
-                </IonCard>}
+                {error && <ErrorMessage message={error} />}
+                {success && <SuccessMessage message="Your email has been verified. Redirecting to login page" />}
             </form>
         )}
     </Formik>

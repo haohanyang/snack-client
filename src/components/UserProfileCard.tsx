@@ -8,7 +8,7 @@ interface UserProfileCardProps {
 const UserProfileCard = ({ userId }: UserProfileCardProps) => {
     const { data: me, isFetching, isError } = useGetMeQuery()
     return <IonCard>
-        <IonCardContent className="ion-no-padding">
+        <IonCardContent className="px-0 py-2">
             {isError ? <ErrorMessage message="Failed to load user information" /> : (
                 isFetching ? <IonSpinner></IonSpinner> : <IonItem lines="none" routerLink="/settings/edit-profile">
                     <IonThumbnail slot="start">
@@ -16,7 +16,6 @@ const UserProfileCard = ({ userId }: UserProfileCardProps) => {
                     </IonThumbnail>
                     <IonLabel>
                         <h3 className="font-semibold text-lg">{me!.fullName}</h3>
-                        <p>{"@" + me!.username}</p>
                         <p>{me!.bio}</p>
                     </IonLabel>
                 </IonItem>)}

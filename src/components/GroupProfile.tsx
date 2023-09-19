@@ -30,7 +30,6 @@ function Members({ id }: MembersProps) {
                         </IonAvatar>
                         <IonLabel>
                             <h3 className="font-semibold">{membership.member.fullName}</h3>
-                            <p>{"@" + membership.member.username}</p>
                         </IonLabel>
                         {membership.isCreator && <IonBadge color="warning" slot="end">
                             Admin

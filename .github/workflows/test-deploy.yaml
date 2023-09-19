@@ -1,10 +1,10 @@
-name: Build and deploy to Netlify
+name: Build and deploy test site to Netlify
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "dev/**" ]
     paths:
-      - .github/workflows/deploy.yaml
+      - .github/workflows/test-deploy.yaml
       - src/components/**
       - src/model/**
       - src/pages/**
@@ -13,7 +13,7 @@ on:
       - src/**
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -48,5 +48,12 @@ jobs:
     - name: Upload the artifact
       uses: actions/upload-artifact@v3
       with:
-        name: prod-dist
+        name: test-dist
         path: dist
+    - name: Deploy the test site to Netlify
+      uses: netlify/actions/cli@master
+      with:
+        args: deploy --dir=dist --prod
+      env:
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

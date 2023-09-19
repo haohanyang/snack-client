@@ -1,6 +1,5 @@
 export function getApiUrl(relative_path: string): string {
-    return process.env.NODE_ENV === "development" ?
-        `http://${import.meta.env.VITE_SERVER_ADDRESS}/api/v1${relative_path}` : `/api/v1${relative_path}`
+    return `/api/v1${relative_path}`
 }
 
 export function getBrokerUrl(): string {

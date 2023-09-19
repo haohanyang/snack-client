@@ -1,9 +1,8 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonRedirect, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react"
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonRedirect, IonSearchbar, IonTitle, IonToolbar, useIonViewDidEnter } from "@ionic/react"
 import { ellipsisHorizontal, ellipsisVertical } from "ionicons/icons"
 import ChatList from "../components/ChatList"
 import LoadingPage from "./LoadingPage"
 import { Redirect } from "react-router"
-import { useEffect } from "react"
 
 interface ChatsProps {
     userId: string | null

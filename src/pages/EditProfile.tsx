@@ -36,7 +36,6 @@ export default function EditProfile({ userId }: EditProfileProps) {
     const [avatarUploadResult, setAvatarUploadResult] = useState<FileUploadResult | null>(null)
     const [backgroundUploadResult, setBackgroundUploadResult] = useState<FileUploadResult | null>(null)
 
-
     // Notify user when upload error occurs
     const [presentToast] = useIonToast()
     const [presentLoading, dismissLoading] = useIonLoading()
@@ -93,7 +92,7 @@ export default function EditProfile({ userId }: EditProfileProps) {
                         method: "PUT",
                         body: blob,
                         headers: {
-                            "x-amz-meta-uploader": userId
+                            "x-amz-meta-user": userId
                         },
                     })
 
@@ -234,17 +233,14 @@ export default function EditProfile({ userId }: EditProfileProps) {
                                 isSubmitting, }) => (
                                 <form id="profile-form" onSubmit={handleSubmit}>
                                     <IonCard>
-                                        <IonCardContent className="px-1">
+                                        <IonCardContent className="pl-0 pr-2">
                                             <IonItem>
-                                                <IonButton slot="start" fill="clear" className="ion-margin-end"
+                                                <IonButton slot="start" fill="clear" className={`h-12 w-12 rounded-full bg-cover bg-[url(${values.avatar})]`}
                                                     onClick={() => avatarFileInputRef.current?.click()}>
-                                                    <IonAvatar>
-                                                        <img className="w-14 h-14 rounded-full" src={values.avatar} />
-                                                    </IonAvatar>
                                                 </IonButton>
                                                 <IonLabel className="ion-text-wrap">
                                                     <p>
-                                                        Enter your name and add an optional profile and background pictures
+                                                        Enter your name and add an optional profile and background picture
                                                         <input type="file" hidden ref={avatarFileInputRef} onChange={e => {
                                                             if (e.target.files && e.target.files[0]) {
                                                                 uploadImage(e.target.files[0], (uploadResult) => {
@@ -265,13 +261,13 @@ export default function EditProfile({ userId }: EditProfileProps) {
                                                     value={values.fullName}></IonInput>
                                             </IonItem>
                                             <IonItem>
-                                                <IonInput value={"@" + me.username} disabled></IonInput>
+                                                <IonInput value={me.email} disabled></IonInput>
                                             </IonItem>
                                         </IonCardContent>
                                     </IonCard>
 
-                                    <IonCard className="h-60" button onClick={() => backgroundFileInputRef.current?.click()}>
-                                        <img src={values.backgroundImage} />
+                                    <IonCard className={`h-60 bg-cover bg-[url(${values.backgroundImage})]`} button
+                                        onClick={() => backgroundFileInputRef.current?.click()}>
                                         <input type="file" accept="image/*" hidden ref={backgroundFileInputRef} onChange={e => {
                                             if (e.target.files && e.target.files[0]) {
                                                 uploadImage(e.target.files[0], (uploadResult) => {

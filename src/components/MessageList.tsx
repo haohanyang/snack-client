@@ -15,13 +15,17 @@ export default function MessageList({ userId, channel }: MessageListProps) {
     const { data: messages = null, isFetching, isError } =
         useGetChannelMessagesQuery(channel)
     const messageListRef = useRef<HTMLIonListElement>(null)
+
     useEffect(() => {
+        // Scroll to bottom when messages are loaded
         if (messages) {
-            setTimeout(() => {
-                messageListRef.current?.lastElementChild?.scrollIntoView({ behavior: "smooth" })
-            }, 100)
+            const timer = setTimeout(() => {
+                messageListRef.current?.lastElementChild?.scrollIntoView({ behavior: "instant" })
+            })
+            return () => clearTimeout(timer)
         }
     }, [messages])
+
     if (isError) {
         return <IonCard color="danger">
             <IonCardContent>
