@@ -11,9 +11,9 @@ interface ChatItemProps {
 }
 
 export default function ChatItem({ id, name, type, message, image, unreadCount }: ChatItemProps) {
-    return <IonItem routerLink={type == ChannelType.USER ? `/chats/user/${id}` : `/chats/group/${id}`}>
+    return <IonItem routerLink={type == ChannelType.USER ? `/chats/user/${id}` : `/chats/group/${id}`} detail={false}>
         <IonAvatar slot="start">
-            <img className="w-10 h-10 rounded-full" src={image} />
+            <img src={image} />
         </IonAvatar>
         <IonLabel>
             <h3 className="font-semibold">{name}</h3>

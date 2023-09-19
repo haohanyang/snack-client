@@ -44,7 +44,7 @@ const Chat = ({ userId }: ChatProps) => {
     const takePhoto = async () => {
         const photo = await Camera.getPhoto({
             resultType: CameraResultType.DataUrl,
-            source: CameraSource.Camera,
+            source: CameraSource.Photos,
             quality: 100,
         })
 

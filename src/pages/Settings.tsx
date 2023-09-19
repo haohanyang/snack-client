@@ -107,8 +107,8 @@ export default function Settings({ userId, setUserId }: SettingsProps) {
             <IonSearchbar placeholder="Search"></IonSearchbar>
             <UserProfileCard userId={userId} />
             <IonCard>
-                <IonCardContent className="ion-no-margin">
-                    <IonItem lines="none">
+                <IonCardContent className="px-0 py-2">
+                    <IonItem lines="none" detail={false}>
                         <IonToggle checked={!!notificationOpen} disabled={isSettingNotification}
                             onIonChange={e => toggleNotification(e.target.checked)}>
                             Notification
@@ -117,8 +117,9 @@ export default function Settings({ userId, setUserId }: SettingsProps) {
                 </IonCardContent>
             </IonCard>
             <IonCard>
-                <IonCardContent className="ion-no-margin">
-                    <IonItem button className="ion-text-center" lines="none" onClick={() => setConfirmLogoutOpen(true)}>
+                <IonCardContent className="px-0 py-2">
+                    <IonItem button className="ion-text-center" lines="none"
+                        onClick={() => setConfirmLogoutOpen(true)} detail={false}>
                         <IonText color="danger">Log out</IonText>
                     </IonItem>
                     <IonAlert

@@ -25,9 +25,9 @@ export function GroupChannelStatus({ channel }: GroupChannelStatusProps) {
 
 export function UserChannelStatus({ userId, channel }: UserChannelStatusProps) {
     const contact = channel!.user1.id === userId ? channel!.user2 : channel!.user1
-    return <IonItem lines="none" color="light" routerLink={`/profile/user/${contact.id}`}>
+    return <IonItem lines="none" color="light" routerLink={`/profile/user/${contact.id}`} detail={false}>
         <IonAvatar slot="start">
-            <img className="w-10 h-10 rounded-full" src={contact.avatar} />
+            <img src={contact.avatar} />
         </IonAvatar>
         <IonLabel>
             <h1 className="text-lg font-semibold">{contact.fullName}</h1>
