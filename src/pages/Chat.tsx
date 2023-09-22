@@ -1,14 +1,14 @@
+import { useRef, useState } from "react"
+import { apiSlice, useGetGroupChannelQuery, useGetUserChannelQuery, useSendChannelMessageMutation } from "../slices/apiSlice"
+import { useParams } from "react-router"
 import {
-    IonBackButton, IonButton, IonButtons,
+    IonBackButton, IonButton, IonButtons, IonSearchbar, RefresherEventDetail,
     IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonItem, IonPage,
-    IonToolbar, useIonLoading, useIonToast
+    IonToolbar, IonRefresher, IonRefresherContent, useIonLoading, useIonToast
 } from "@ionic/react"
 import {
     cameraOutline, documentOutline, ellipsisHorizontal, ellipsisVertical,
 } from "ionicons/icons"
-import { useGetGroupChannelQuery, useGetUserChannelQuery, useSendChannelMessageMutation } from "../slices/apiSlice"
-import { useRef } from "react"
-import { useParams } from "react-router"
 import { ChannelInfo, ChannelType } from "../models/channel"
 import MessageList from "../components/MessageList"
 import { GroupChannelStatus, UserChannelStatus } from "../components/ContactStatus"
@@ -22,6 +22,8 @@ import ErrorPage from "./ErrorPage"
 import NotFound from "./NotFound"
 import './Chat.css'
 import { getApiUrl } from "../utils"
+import { useAppDispatch } from "../hooks"
+import stomp, { StompWrapper } from "../ws"
 
 interface ChatProps {
     userId: string | null
@@ -40,6 +42,16 @@ const Chat = ({ userId }: ChatProps) => {
     const [presentLoading, dismissLoading] = useIonLoading()
     const fileRef = useRef<HTMLInputElement>(null)
     const [sendChannelMessage, { isLoading }] = useSendChannelMessageMutation()
+    const dispatch = useAppDispatch()
+    const ws = useRef<StompWrapper>(stomp)
+
+    const refresh = async (event: CustomEvent<RefresherEventDetail>, channel: ChannelInfo) => {
+        dispatch(apiSlice.endpoints.getChannelMessages.initiate(channel, { forceRefetch: true }))
+        if (!ws.current.connected) {
+            ws.current.connect()
+        }
+        event.detail.complete();
+    }
 
     const takePhoto = async () => {
         const photo = await Camera.getPhoto({
@@ -265,9 +277,9 @@ const Chat = ({ userId }: ChatProps) => {
     return (
         <IonPage>
             <IonHeader>
-                <IonToolbar color="light">
+                <IonToolbar>
                     <IonButtons slot="start">
-                        <IonBackButton defaultHref="/chats">Back</IonBackButton>
+                        <IonBackButton defaultHref="/chats"></IonBackButton>
                     </IonButtons>
                     {channel.type == ChannelType.USER ? <UserChannelStatus userId={userId} channel={userChannel!} />
                         : <GroupChannelStatus userId={userId} channel={groupChannel!} />}
@@ -279,10 +291,13 @@ const Chat = ({ userId }: ChatProps) => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen color="#FFFFFF">
+            <IonContent fullscreen>
+                <IonRefresher slot="fixed" onIonRefresh={e => refresh(e, channel)}>
+                    <IonRefresherContent refreshingSpinner={null}></IonRefresherContent>
+                </IonRefresher>
                 <MessageList userId={userId} channel={channel} />
             </IonContent>
-            <IonFooter translucent={true} color="light">
+            <IonFooter translucent={true}>
                 <IonToolbar>
                     <Formik
                         initialValues={{ text: "" }}

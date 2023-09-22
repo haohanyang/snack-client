@@ -1,4 +1,4 @@
-import { Redirect, Route, useLocation } from "react-router-dom"
+import { Route, useLocation } from "react-router-dom"
 import {
     IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonViewDidEnter
 } from "@ionic/react"

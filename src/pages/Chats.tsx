@@ -1,19 +1,38 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonRedirect, IonSearchbar, IonTitle, IonToolbar, useIonViewDidEnter } from "@ionic/react"
+import {
+    IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage,
+    IonSearchbar, IonTitle, IonToolbar, IonRefresher, IonRefresherContent,
+    RefresherEventDetail
+} from "@ionic/react"
 import { ellipsisHorizontal, ellipsisVertical } from "ionicons/icons"
 import ChatList from "../components/ChatList"
 import LoadingPage from "./LoadingPage"
 import { Redirect } from "react-router"
+import { useAppDispatch } from "../hooks"
+import { apiSlice } from "../slices/apiSlice"
+import { useRef } from "react"
+import stomp, { StompWrapper } from "../ws"
+
 
 interface ChatsProps {
     userId: string | null
 }
 export const Chats = ({ userId }: ChatsProps) => {
+    const dispatch = useAppDispatch()
+    const ws = useRef<StompWrapper>(stomp)
 
     if (userId === null) {
         return <LoadingPage />
     }
     if (!userId) {
         return <Redirect to="/" />
+    }
+
+    const refresh = async (event: CustomEvent<RefresherEventDetail>) => {
+        dispatch(apiSlice.endpoints.getChannels.initiate(undefined, { forceRefetch: true }))
+        if (!ws.current.connected) {
+            ws.current.connect()
+        }
+        event.detail.complete();
     }
 
     return (
@@ -41,9 +60,12 @@ export const Chats = ({ userId }: ChatsProps) => {
                     </IonToolbar>
                 </IonHeader>
                 <IonSearchbar placeholder="Search"></IonSearchbar>
+                <IonRefresher slot="fixed" onIonRefresh={refresh}>
+                    <IonRefresherContent refreshingSpinner={null}></IonRefresherContent>
+                </IonRefresher>
                 <ChatList userId={userId} />
             </IonContent>
-        </IonPage>
+        </IonPage >
     )
 }
 

@@ -1,14 +1,17 @@
 import {
-    IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonLabel, IonList,
-    IonListHeader, IonPage, IonSearchbar, IonTitle, IonToolbar
+    IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonLabel, IonList, RefresherEventDetail,
+    IonListHeader, IonPage, IonSearchbar, IonTitle, IonToolbar, IonRefresher, IonRefresherContent
 } from "@ionic/react"
 import { addOutline } from "ionicons/icons"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import NewGroupModal from "../components/NewGroupModal"
 import GroupList from "../components/GroupList"
 import FriendList from "../components/FriendList"
 import LoadingPage from "./LoadingPage"
 import { Redirect } from "react-router-dom"
+import { useAppDispatch } from "../hooks"
+import { apiSlice } from "../slices/apiSlice"
+import stomp, { StompWrapper } from "../ws"
 
 interface ContactsProps {
     userId: string | null
@@ -16,6 +19,17 @@ interface ContactsProps {
 
 export default function Contacts({ userId }: ContactsProps) {
     const [newChannelModalOpen, setNewChannelModalOpen] = useState<boolean>(false)
+    const dispatch = useAppDispatch()
+    const ws = useRef<StompWrapper>(stomp)
+
+    const refresh = (event: CustomEvent<RefresherEventDetail>) => {
+        dispatch(apiSlice.endpoints.getFriends.initiate(undefined, { forceRefetch: true }))
+        dispatch(apiSlice.endpoints.getGroupChannels.initiate(undefined, { forceRefetch: true }))
+        if (!ws.current.connected) {
+            ws.current.connect()
+        }
+        event.detail.complete()
+    }
 
     if (userId === null) {
         return <LoadingPage />
@@ -39,6 +53,11 @@ export default function Contacts({ userId }: ContactsProps) {
                     </IonToolbar>
                 </IonHeader>
                 <IonSearchbar placeholder="Search"></IonSearchbar>
+
+                <IonRefresher slot="fixed" onIonRefresh={refresh}>
+                    <IonRefresherContent refreshingSpinner={null}></IonRefresherContent>
+                </IonRefresher>
+
                 <IonList>
                     <IonListHeader>
                         <IonLabel>Friends</IonLabel>

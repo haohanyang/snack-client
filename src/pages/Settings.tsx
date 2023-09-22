@@ -98,9 +98,9 @@ export default function Settings({ userId, setUserId }: SettingsProps) {
                 <IonTitle>Settings</IonTitle>
             </IonToolbar>
         </IonHeader>
-        <IonContent fullscreen color="light">
+        <IonContent fullscreen>
             <IonHeader collapse="condense">
-                <IonToolbar color="light">
+                <IonToolbar>
                     <IonTitle size="large">Settings</IonTitle>
                 </IonToolbar>
             </IonHeader>

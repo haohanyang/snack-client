@@ -1,6 +1,6 @@
 import { Redirect, useParams } from "react-router-dom"
-import UserProfile from "../components/UserProfile"
-import GroupProfile from "../components/GroupProfile"
+import { UserProfilePage } from "../components/UserProfile"
+import { GroupProfilePage } from "../components/GroupProfile"
 import LoadingPage from "./LoadingPage"
 import { useGetGroupChannelQuery, useGetUserProfileQuery } from "../slices/apiSlice"
 import ErrorPage from "./ErrorPage"
@@ -36,15 +36,14 @@ export default function ContactProfile({ userId }: ContactProfileProps) {
     }
 
     if (type === "user") {
-        return <UserProfile user={user!} />
+        return <UserProfilePage user={user!} />
     }
 
     if (type === "group") {
-        return <GroupProfile group={group!} />
+        return <GroupProfilePage group={group!} />
     }
 
     return (
         <NotFound />
     )
 }
-

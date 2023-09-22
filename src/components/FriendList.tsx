@@ -44,7 +44,7 @@ function FriendList({ userId }: FriendListProps) {
         return <> {friends!.map(friend => (
             <IonItem button onClick={() => createChat(friend)} key={friend.id} disabled={isLoading} detail={false}>
                 <IonAvatar slot="start">
-                    <img src={friend.avatar} />
+                    <img className="h-full w-full" src={friend.avatar} />
                 </IonAvatar>
                 <IonLabel>
                     <h3 className="font-semibold">{friend.fullName}</h3>

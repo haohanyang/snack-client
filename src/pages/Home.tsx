@@ -4,7 +4,6 @@ import { Auth } from "aws-amplify"
 import { Redirect } from "react-router"
 import LoadingPage from "./LoadingPage"
 
-
 interface HomeProps {
     userId: string | null
     setUserId: (_userId: string) => void

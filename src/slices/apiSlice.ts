@@ -4,19 +4,8 @@ import User, { UpdateProfileRequest } from "../models/user"
 import { ChannelInfo, ChannelType, Channels, GroupChannel, GroupChannelRequest, UserChannel, UserChannelRequest } from "../models/channel"
 import { Message, MessageRequest } from "../models/message"
 import Membership from "../models/membership"
-import { Client, StompSubscription } from "@stomp/stompjs"
-import { getApiUrl, getBrokerUrl } from "../utils"
-
-let stomp: Client = new Client({
-    brokerURL: getBrokerUrl(),
-    debug: str => {
-        if (process.env.NODE_ENV === "development") {
-            console.log(str)
-        }
-    },
-})
-
-let subscription: StompSubscription | null = null
+import { getApiUrl } from "../utils"
+import stomp from '../ws'
 
 export const apiSlice = createApi({
     reducerPath: "api",
@@ -30,7 +19,7 @@ export const apiSlice = createApi({
             return headers
         },
     }),
-    tagTypes: ["Me", "Friends", "NavChannels", "GroupChannel", "GroupChannels", "UserChannel", "UserChannels", "ChannelMessages", "GroupChannelMembers"],
+    tagTypes: ["Me", "Friends", "Chats", "UserProfile", "GroupChannel", "GroupChannels", "UserChannel", "UserChannels", "ChannelMessages", "GroupChannelMembers"],
     endpoints: builder => ({
         getMe: builder.query<User, void>({
             query: () => "users/@me/profile",
@@ -43,73 +32,65 @@ export const apiSlice = createApi({
                     try {
                         const { data: me } = await cacheDataLoaded
                         const jwt = (await Auth.currentSession()).getIdToken().getJwtToken()
+                        stomp.setConnectAuth(jwt)
 
-                        stomp.connectHeaders = {
-                            Authorization: jwt
-                        }
+                        stomp.subsribe(`/gateway/${me.id}`, packet => {
+                            const message: Message = JSON.parse(packet.body)
 
-                        stomp.onConnect = _frame => {
-                            console.log("Connected to websocket")
-                            if (!subscription) {
-                                subscription = stomp.subscribe(`/gateway/${me.id}`, packet => {
-                                    const message: Message = JSON.parse(packet.body)
-
-                                    if (process.env.NODE_ENV === "development") {
-                                        console.log("Received message: ", message)
-                                    }
-
-                                    // Don't notify if the message is sent by me
-                                    if (message.author.id === me.id) {
-                                        return
-                                    }
-
-                                    // Update message list
-                                    dispatch(apiSlice.util.updateQueryData("getChannelMessages", message.channel, draft => {
-                                        draft.push(message)
-                                    }))
-                                    // Update channel list
-                                    dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
-                                        if (message.channel.type == ChannelType.USER) {
-                                            const channel = draft.userChannels.find(channel => channel.id == message.channel.id)
-                                            if (channel) {
-                                                channel.lastMessage = message
-                                                channel.lastUpdated = message.createdAt
-                                                channel.unreadMessagesCount += 1
-                                            } else {
-                                                dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
-                                                    const userChannel: UserChannel = {
-                                                        id: message.channel.id,
-                                                        user1: message.author.id < me.id ? message.author : me,
-                                                        user2: message.author.id < me.id ? me : message.author,
-                                                        lastMessage: message,
-                                                        lastUpdated: new Date(message.createdAt).toISOString(),
-                                                        unreadMessagesCount: 1,
-                                                        type: ChannelType.USER
-                                                    }
-                                                    draft.userChannels.push(userChannel)
-                                                }))
-                                            }
-                                        } else {
-                                            const channel = draft.groupChannels.find(channel => channel.id == message.channel.id)
-                                            if (channel) {
-                                                channel.lastMessage = message
-                                                channel.lastUpdated = message.createdAt
-                                                channel.unreadMessagesCount++
-                                            } else {
-                                                // TODO: get group channel info
-                                                dispatch(apiSlice.util.invalidateTags(["NavChannels"]))
-                                            }
-                                        }
-                                    }))
-                                })
+                            if (process.env.NODE_ENV === "development") {
+                                console.log("Received message: ", message)
                             }
-                        }
-                        stomp.activate()
+
+                            // Don't notify if the message is sent by me
+                            if (message.author.id === me.id) {
+                                return
+                            }
+
+                            // Update message list
+                            dispatch(apiSlice.util.updateQueryData("getChannelMessages", message.channel, draft => {
+                                draft.push(message)
+                            }))
+                            // Update channel list
+                            dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
+                                if (message.channel.type == ChannelType.USER) {
+                                    const channel = draft.userChannels.find(channel => channel.id == message.channel.id)
+                                    if (channel) {
+                                        channel.lastMessage = message
+                                        channel.lastUpdated = message.createdAt
+                                        channel.unreadMessagesCount += 1
+                                    } else {
+                                        dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
+                                            const userChannel: UserChannel = {
+                                                id: message.channel.id,
+                                                user1: message.author.id < me.id ? message.author : me,
+                                                user2: message.author.id < me.id ? me : message.author,
+                                                lastMessage: message,
+                                                lastUpdated: new Date(message.createdAt).toISOString(),
+                                                unreadMessagesCount: 1,
+                                                type: ChannelType.USER
+                                            }
+                                            draft.userChannels.push(userChannel)
+                                        }))
+                                    }
+                                } else {
+                                    const channel = draft.groupChannels.find(channel => channel.id == message.channel.id)
+                                    if (channel) {
+                                        channel.lastMessage = message
+                                        channel.lastUpdated = message.createdAt
+                                        channel.unreadMessagesCount++
+                                    } else {
+                                        // TODO: get group channel info
+                                        dispatch(apiSlice.util.invalidateTags(["Chats"]))
+                                    }
+                                }
+                            }))
+                        })
+                        stomp.connect()
                     } catch (error) {
-                        console.error(error)
+                        console.log(error)
                     }
                     await cacheEntryRemoved
-                    stomp?.deactivate()
+                    await stomp.disconnect()
                 }
             }
         }),
@@ -130,12 +111,13 @@ export const apiSlice = createApi({
                         draft.status = updatedUser.status
                     }))
                 } catch (error) {
+                    console.log(error)
                 }
             },
         }),
         getUserProfile: builder.query<User, string>({
             query: (userId) => `users/${userId}/profile`,
-            providesTags: ["Me"],
+            providesTags: (_result, _error, arg) => [{ type: "UserProfile", id: arg }]
         }),
         // All friends of the user
         getFriends: builder.query<User[], void>({
@@ -145,7 +127,7 @@ export const apiSlice = createApi({
         // All channels the user is a member of
         getChannels: builder.query<Channels, void>({
             query: () => "users/@me/channels",
-            providesTags: ["NavChannels"]
+            providesTags: ["Chats"]
         }),
         // Create a new user channel
         addNewUserChannel: builder.mutation<UserChannel, UserChannelRequest>({
@@ -154,7 +136,7 @@ export const apiSlice = createApi({
                 method: "POST",
                 body: userChannelRequest,
             }),
-            invalidatesTags: ["NavChannels"]
+            invalidatesTags: ["Chats", "UserChannels"]
         }),
         // Get a specific user channel
         getUserChannel: builder.query<UserChannel, string>({
@@ -167,8 +149,9 @@ export const apiSlice = createApi({
                 type == ChannelType.USER ? `channels/user/${id}/messages` : `channels/group/${id}/messages`,
             providesTags: (_result, _error, arg) =>
                 [{ type: "ChannelMessages", id: arg.type == ChannelType.USER ? "u" + arg.id : "g" + arg.id }],
-            onCacheEntryAdded(arg, { dispatch, cacheDataLoaded }) {
+            onCacheEntryAdded: async (arg, { dispatch, cacheDataLoaded }) => {
                 // If the channel is a user channel, mark all messages as read
+                await cacheDataLoaded
                 if (arg.type == ChannelType.USER) {
                     dispatch(apiSlice.util.updateQueryData("getChannels", undefined, draft => {
                         const channel = draft.userChannels.find(channel => channel.id == arg.id)
@@ -192,7 +175,7 @@ export const apiSlice = createApi({
                 method: "POST",
                 body: groupChannelRequest,
             }),
-            invalidatesTags: ["NavChannels", "GroupChannels"]
+            invalidatesTags: ["Chats", "GroupChannels"]
         }),
         // Get all group channels the user is a member of
         getGroupChannels: builder.query<GroupChannel[], void>({
@@ -231,7 +214,7 @@ export const apiSlice = createApi({
                                 channel.lastMessage = newMessage
                                 channel.lastUpdated = newMessage.createdAt
                             } else {
-                                dispatch(apiSlice.util.invalidateTags(["NavChannels"]))
+                                dispatch(apiSlice.util.invalidateTags(["Chats"]))
                             }
                         } else {
                             const channel = draft.groupChannels.find(channel => channel.id == messageRequest.channel.id)
@@ -239,7 +222,7 @@ export const apiSlice = createApi({
                                 channel.lastMessage = newMessage
                                 channel.lastUpdated = newMessage.createdAt
                             } else {
-                                dispatch(apiSlice.util.invalidateTags(["NavChannels"]))
+                                dispatch(apiSlice.util.invalidateTags(["Chats"]))
                             }
                         }
                     }))

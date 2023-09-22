@@ -1,7 +1,6 @@
 import { useRef, useState } from "react"
 import { Formik } from "formik"
 import {
-    IonAvatar,
     IonBackButton, IonButton, IonButtons, IonCard, IonCardContent,
     IonContent, IonHeader, IonInput, IonItem, IonLabel, IonPage,
     IonTextarea, IonTitle, IonToolbar, useIonLoading, useIonToast
