@@ -47,7 +47,7 @@ export function UserProfilePage({ user }: UserProfilePageProps) {
 }
 
 export function UserProfileModal({ user, isOpen, close }: UserProfileModalProps) {
-    return <IonModal isOpen={isOpen} trigger="open-modal">
+    return <IonModal isOpen={isOpen}>
         <IonHeader>
             <IonToolbar>
                 <IonButtons slot="start">

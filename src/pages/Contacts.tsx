@@ -23,12 +23,15 @@ export default function Contacts({ userId }: ContactsProps) {
     const ws = useRef<StompWrapper>(stomp)
 
     const refresh = (event: CustomEvent<RefresherEventDetail>) => {
-        dispatch(apiSlice.endpoints.getFriends.initiate(undefined, { forceRefetch: true }))
-        dispatch(apiSlice.endpoints.getGroupChannels.initiate(undefined, { forceRefetch: true }))
         if (!ws.current.connected) {
             ws.current.connect()
         }
-        event.detail.complete()
+        Promise.all([
+            dispatch(apiSlice.endpoints.getFriends.initiate(undefined, { forceRefetch: true })),
+            dispatch(apiSlice.endpoints.getGroupChannels.initiate(undefined, { forceRefetch: true }))
+        ]).then(() => {
+            event.detail.complete()
+        })
     }
 
     if (userId === null) {
@@ -55,7 +58,7 @@ export default function Contacts({ userId }: ContactsProps) {
                 <IonSearchbar placeholder="Search"></IonSearchbar>
 
                 <IonRefresher slot="fixed" onIonRefresh={refresh}>
-                    <IonRefresherContent refreshingSpinner={null}></IonRefresherContent>
+                    <IonRefresherContent></IonRefresherContent>
                 </IonRefresher>
 
                 <IonList>

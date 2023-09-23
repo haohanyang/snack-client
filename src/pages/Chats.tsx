@@ -29,10 +29,12 @@ export const Chats = ({ userId }: ChatsProps) => {
 
     const refresh = async (event: CustomEvent<RefresherEventDetail>) => {
         dispatch(apiSlice.endpoints.getChannels.initiate(undefined, { forceRefetch: true }))
+            .then(() => {
+                event.detail.complete();
+            })
         if (!ws.current.connected) {
             ws.current.connect()
         }
-        event.detail.complete();
     }
 
     return (
@@ -61,7 +63,7 @@ export const Chats = ({ userId }: ChatsProps) => {
                 </IonHeader>
                 <IonSearchbar placeholder="Search"></IonSearchbar>
                 <IonRefresher slot="fixed" onIonRefresh={refresh}>
-                    <IonRefresherContent refreshingSpinner={null}></IonRefresherContent>
+                    <IonRefresherContent></IonRefresherContent>
                 </IonRefresher>
                 <ChatList userId={userId} />
             </IonContent>

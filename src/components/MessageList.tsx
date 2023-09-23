@@ -12,7 +12,7 @@ interface MessageListProps {
 }
 
 export default function MessageList({ userId, channel }: MessageListProps) {
-    const { data: messages = null, isFetching, isError } =
+    const { data: messages = null, isLoading, isError } =
         useGetChannelMessagesQuery(channel)
     const messageListRef = useRef<HTMLIonListElement>(null)
 
@@ -32,16 +32,18 @@ export default function MessageList({ userId, channel }: MessageListProps) {
                 <p><IonIcon icon={alertCircleOutline} /> Failed to load messages </p>
             </IonCardContent>
         </IonCard>
-    } else if (isFetching) {
+    } else if (isLoading) {
         return <div className="ion-text-center ion-margin-top">
             <IonSpinner />
         </div>
-    } else {
+    } else if (messages) {
         return <IonList ref={messageListRef}>
-            {messages!.map(message => (
+            {messages.map(message => (
                 message.attachment ? <AttachmentMessageItem key={message.id} message={message} userId={userId} />
                     : <TextMessageItem key={message.id} message={message} userId={userId} />
             ))}
         </IonList>
     }
+
+    return <></>
 }

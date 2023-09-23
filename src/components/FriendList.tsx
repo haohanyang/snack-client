@@ -12,12 +12,12 @@ interface FriendListProps {
 
 function FriendList({ userId }: FriendListProps) {
     const router = useIonRouter()
-    const { data: friends, isFetching, isError } = useGetFriendsQuery()
-    const [addNewUserChannel, { isLoading }] = useAddNewUserChannelMutation()
+    const { data: friends, isError, isLoading } = useGetFriendsQuery()
+    const [addNewUserChannel, { isLoading: isAdding }] = useAddNewUserChannelMutation()
     const [present] = useIonToast()
 
     const createChat = async (friend: User) => {
-        if (!isLoading) {
+        if (!isAdding) {
             try {
                 const reqBody: UserChannelRequest = userId < friend.id ? {
                     user1Id: userId,
@@ -38,20 +38,22 @@ function FriendList({ userId }: FriendListProps) {
     }
     if (isError) {
         return <ErrorMessage message="Failed to load friends information" />
-    } else if (isFetching) {
+    } else if (isLoading) {
         return <Loader />
-    } else {
-        return <> {friends!.map(friend => (
+    } else if (friends) {
+        return <> {friends.map(friend => (
             <IonItem button onClick={() => createChat(friend)} key={friend.id} disabled={isLoading} detail={false}>
-                <IonAvatar slot="start">
+                <IonAvatar slot="start" className="w-14 h-14">
                     <img className="h-full w-full" src={friend.avatar} />
                 </IonAvatar>
                 <IonLabel>
                     <h3 className="font-semibold">{friend.fullName}</h3>
                 </IonLabel>
-            </IonItem>
-        ))} </>
+            </IonItem >
+        ))
+        } </>
     }
+    return <></>
 }
 
 export default FriendList

@@ -127,7 +127,7 @@ export const apiSlice = createApi({
         // All channels the user is a member of
         getChannels: builder.query<Channels, void>({
             query: () => "users/@me/channels",
-            providesTags: ["Chats"]
+            providesTags: ["Chats"],
         }),
         // Create a new user channel
         addNewUserChannel: builder.mutation<UserChannel, UserChannelRequest>({
@@ -238,5 +238,5 @@ export const {
     useGetMeQuery, useGetUserProfileQuery, useGetChannelsQuery, useUpdateMeMutation,
     useGetUserChannelQuery, useGetGroupChannelQuery, useGetChannelMessagesQuery,
     useGetGroupChannelsQuery, useGetFriendsQuery, useAddNewUserChannelMutation,
-    useAddNewGroupChannelMutation, useSendChannelMessageMutation, useGetGroupChannelMembersQuery
+    useAddNewGroupChannelMutation, useSendChannelMessageMutation, useGetGroupChannelMembersQuery,
 } = apiSlice

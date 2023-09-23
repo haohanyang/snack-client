@@ -17,8 +17,8 @@ interface UserChannelStatusProps {
 export function GroupChannelStatus({ channel }: GroupChannelStatusProps) {
     const [openGroupProfile, setOpenGroupProfile] = useState(false)
     return <>
-        <IonItem lines="none" onClick={() => setOpenGroupProfile(true)} button>
-            <IonAvatar slot="start">
+        <IonItem lines="none" onClick={() => setOpenGroupProfile(true)} button color="light">
+            <IonAvatar slot="start" className="w-14 h-14">
                 <img className="h-full w-full" src={channel.avatar} />
             </IonAvatar>
             <IonLabel>
@@ -34,8 +34,8 @@ export function UserChannelStatus({ userId, channel }: UserChannelStatusProps) {
     const [openUserProfile, setOpenUserProfile] = useState(false)
     const contact = channel!.user1.id === userId ? channel!.user2 : channel!.user1
     return <>
-        <IonItem lines="none" onClick={() => setOpenUserProfile(true)} detail={false} button>
-            <IonAvatar slot="start">
+        <IonItem lines="none" onClick={() => setOpenUserProfile(true)} detail={false} button color="light">
+            <IonAvatar slot="start" className="w-14 h-14">
                 <img className="w-full h-full" src={contact.avatar} />
             </IonAvatar>
             <IonLabel>

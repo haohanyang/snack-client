@@ -93,7 +93,7 @@ export function GroupProfilePage({ group }: GroupProfilePageProps) {
 
 
 export function GroupProfileModal({ group, isOpen, close }: GroupProfileModalProps) {
-    return <IonModal isOpen={isOpen} trigger="open-modal">
+    return <IonModal isOpen={isOpen}>
         <IonHeader>
             <IonToolbar>
                 <IonButtons slot="start">

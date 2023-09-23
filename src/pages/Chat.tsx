@@ -1,8 +1,11 @@
-import { useRef, useState } from "react"
-import { apiSlice, useGetGroupChannelQuery, useGetUserChannelQuery, useSendChannelMessageMutation } from "../slices/apiSlice"
+import { useRef } from "react"
+import {
+    apiSlice, useGetGroupChannelQuery,
+    useGetUserChannelQuery, useSendChannelMessageMutation
+} from "../slices/apiSlice"
 import { useParams } from "react-router"
 import {
-    IonBackButton, IonButton, IonButtons, IonSearchbar, RefresherEventDetail,
+    IonBackButton, IonButton, IonButtons, RefresherEventDetail,
     IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonItem, IonPage,
     IonToolbar, IonRefresher, IonRefresherContent, useIonLoading, useIonToast
 } from "@ionic/react"
@@ -38,6 +41,7 @@ const Chat = ({ userId }: ChatProps) => {
     const { data: groupChannel, isFetching: isFetchingGroupChannel, isError: isFetchingGroupChannelError } = useGetGroupChannelQuery(id, {
         skip: type !== "group"
     })
+
     const [presentToast] = useIonToast()
     const [presentLoading, dismissLoading] = useIonLoading()
     const fileRef = useRef<HTMLInputElement>(null)
@@ -46,11 +50,13 @@ const Chat = ({ userId }: ChatProps) => {
     const ws = useRef<StompWrapper>(stomp)
 
     const refresh = async (event: CustomEvent<RefresherEventDetail>, channel: ChannelInfo) => {
-        dispatch(apiSlice.endpoints.getChannelMessages.initiate(channel, { forceRefetch: true }))
         if (!ws.current.connected) {
             ws.current.connect()
         }
-        event.detail.complete();
+        dispatch(apiSlice.endpoints.getChannelMessages.initiate(channel, { forceRefetch: true }))
+            .then(() => {
+                event.detail.complete();
+            })
     }
 
     const takePhoto = async () => {
@@ -277,7 +283,7 @@ const Chat = ({ userId }: ChatProps) => {
     return (
         <IonPage>
             <IonHeader>
-                <IonToolbar>
+                <IonToolbar color="light">
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/chats"></IonBackButton>
                     </IonButtons>
@@ -293,7 +299,7 @@ const Chat = ({ userId }: ChatProps) => {
 
             <IonContent fullscreen>
                 <IonRefresher slot="fixed" onIonRefresh={e => refresh(e, channel)}>
-                    <IonRefresherContent refreshingSpinner={null}></IonRefresherContent>
+                    <IonRefresherContent></IonRefresherContent>
                 </IonRefresher>
                 <MessageList userId={userId} channel={channel} />
             </IonContent>
