@@ -239,4 +239,5 @@ export const {
     useGetUserChannelQuery, useGetGroupChannelQuery, useGetChannelMessagesQuery,
     useGetGroupChannelsQuery, useGetFriendsQuery, useAddNewUserChannelMutation,
     useAddNewGroupChannelMutation, useSendChannelMessageMutation, useGetGroupChannelMembersQuery,
+    useLazyGetUserChannelQuery, useLazyGetGroupChannelQuery
 } = apiSlice

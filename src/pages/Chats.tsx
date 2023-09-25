@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import {
     IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage,
     IonSearchbar, IonTitle, IonToolbar, IonRefresher, IonRefresherContent,
@@ -5,27 +6,17 @@ import {
 } from "@ionic/react"
 import { ellipsisHorizontal, ellipsisVertical } from "ionicons/icons"
 import ChatList from "../components/ChatList"
-import LoadingPage from "./LoadingPage"
-import { Redirect } from "react-router"
 import { useAppDispatch } from "../hooks"
 import { apiSlice } from "../slices/apiSlice"
-import { useRef } from "react"
 import stomp, { StompWrapper } from "../ws"
 
 
 interface ChatsProps {
-    userId: string | null
+    userId: string
 }
 export const Chats = ({ userId }: ChatsProps) => {
     const dispatch = useAppDispatch()
     const ws = useRef<StompWrapper>(stomp)
-
-    if (userId === null) {
-        return <LoadingPage />
-    }
-    if (!userId) {
-        return <Redirect to="/" />
-    }
 
     const refresh = async (event: CustomEvent<RefresherEventDetail>) => {
         dispatch(apiSlice.endpoints.getChannels.initiate(undefined, { forceRefetch: true }))

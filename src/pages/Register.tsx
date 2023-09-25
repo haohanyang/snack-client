@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Auth } from "aws-amplify"
-import { IonContent, IonHeader, IonItem, IonPage, IonRouterLink, IonTitle, IonToolbar, useIonRouter } from "@ionic/react"
+import { IonContent, IonHeader, IonItem, IonPage, IonRouterLink, IonTitle, IonToolbar, useIonRouter, useIonViewDidEnter } from "@ionic/react"
 import { SignUpForm } from "../components/SignUpForm"
 import { ConfirmSignUpForm } from "../components/ConfirmSignUpForm"
 
@@ -49,7 +49,7 @@ const Home: React.FC = () => {
                 </IonHeader>
 
                 <IonItem lines="none">
-                    <p>Already have an account? <IonRouterLink routerLink="/">Log in</IonRouterLink></p>
+                    <p>Already have an account? <IonRouterLink routerLink="/login" routerDirection="forward">Log in</IonRouterLink></p>
                 </IonItem>
 
                 {signUpState == "confirmSignUp" &&

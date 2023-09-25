@@ -1,12 +1,20 @@
-import { Route, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { Auth } from "aws-amplify"
+import { Redirect, Route, useLocation } from "react-router-dom"
+import { IonReactRouter } from "@ionic/react-router"
+import { useGetMeQuery } from "./slices/apiSlice"
 import {
-    IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonViewDidEnter
+    IonApp, IonIcon, IonLabel, IonLoading, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs,
+    setupIonicReact
 } from "@ionic/react"
 import { chatbubble, people, settings } from "ionicons/icons"
 import Chats from "./pages/Chats"
 import Contacts from "./pages/Contacts"
 import Settings from "./pages/Settings"
-import ContactProfile from "./pages/ContactProfile"
+import EditProfile from "./pages/EditProfile"
+import Home from "./pages/Home"
+import Register from "./pages/Register"
+import Login from "./pages/Login"
 import Chat from "./pages/Chat"
 
 /* Core CSS required for Ionic components to work properly */
@@ -27,20 +35,15 @@ import "@ionic/react/css/display.css"
 /* Theme variables */
 import "./theme/variables.css"
 
-import EditProfile from "./pages/EditProfile"
-import Home from "./pages/Home"
-import Register from "./pages/Register"
-import ErrorPage from "./pages/ErrorPage"
-import { useEffect, useRef, useState } from "react"
-import { Auth } from "aws-amplify"
-import NotFound from "./pages/NotFound"
-import { useGetMeQuery } from "./slices/apiSlice"
-
 setupIonicReact()
+
+interface tabRoutesProps {
+    userId: string
+    setUserId: (userId: string) => void
+}
 
 const App: React.FC = () => {
     const [userId, setUserId] = useState<string | null>(null)
-    const { pathname } = useLocation()
     const setUserIdCallback = (_userId: string) => setUserId(_userId)
 
     useGetMeQuery(undefined, {
@@ -57,9 +60,45 @@ const App: React.FC = () => {
                 .catch(error => {
                     console.log(error)
                     setUserId("")
+                    console.log("User not logged in")
                 })
         }
     }, [userId])
+
+    if (userId === null) {
+        return <IonApp>
+            <IonLoading />
+        </IonApp>
+    } else if (!userId) {
+        return <IonApp>
+            <IonReactRouter>
+                <IonRouterOutlet>
+                    <Route exact path="/">
+                        <Home />
+                    </Route>
+                    <Route exact path="/login">
+                        <Login setUserId={setUserIdCallback} />
+                    </Route>
+                    <Route exact path="/register">
+                        <Register />
+                    </Route>
+                    <Route>
+                        <Redirect to="/" />
+                    </Route>
+                </IonRouterOutlet>
+            </IonReactRouter>
+        </IonApp>
+    }
+
+    return <IonApp>
+        <IonReactRouter>
+            <TabRoutes userId={userId!} setUserId={setUserIdCallback} />
+        </IonReactRouter>
+    </IonApp>
+}
+
+const TabRoutes = ({ userId, setUserId }: tabRoutesProps) => {
+    const { pathname } = useLocation()
 
     useEffect(() => {
         if (pathname === "/chats" || pathname === "/contacts" || pathname === "/settings") {
@@ -69,14 +108,8 @@ const App: React.FC = () => {
         }
     }, [pathname])
 
-    return <IonTabs>
+    return <IonTabs >
         <IonRouterOutlet>
-            <Route exact path="/">
-                <Home userId={userId} setUserId={setUserIdCallback} />
-            </Route>
-            <Route exact path="/register">
-                <Register />
-            </Route>
             <Route exact path="/chats">
                 <Chats userId={userId} />
             </Route>
@@ -87,18 +120,13 @@ const App: React.FC = () => {
                 <Contacts userId={userId} />
             </Route>
             <Route exact path="/settings">
-                <Settings userId={userId} setUserId={setUserIdCallback} />
-            </Route>
-            <Route path="/profile/:type/:id">
-                <ContactProfile userId={userId} />
+                <Settings userId={userId} setUserId={setUserId} />
             </Route>
             <Route exact path="/settings/edit-profile">
                 <EditProfile userId={userId} />
             </Route>
-            <Route exact path="/error">
-                <ErrorPage />
-            </Route>
-            <Route component={NotFound}>
+            <Route>
+                <Redirect to="/chats" />
             </Route>
         </IonRouterOutlet>
         <IonTabBar slot="bottom" id="tab-bar">
@@ -115,7 +143,7 @@ const App: React.FC = () => {
                 <IonLabel>Settings</IonLabel>
             </IonTabButton>
         </IonTabBar>
-    </IonTabs>
+    </IonTabs >
 }
 
 export default App

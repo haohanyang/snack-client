@@ -4,9 +4,9 @@ import { Amplify } from 'aws-amplify'
 import { Provider } from 'react-redux'
 import App from './App'
 import store from './store'
-import { IonApp } from '@ionic/react'
-import { IonReactRouter } from '@ionic/react-router'
 import { initializeApp } from "firebase/app"
+import './index.css'
+
 
 Amplify.configure({
     aws_cognito_region: "eu-north-1",
@@ -29,11 +29,7 @@ const root = createRoot(container!)
 root.render(
     <React.StrictMode>
         <Provider store={store}>
-            <IonApp>
-                <IonReactRouter>
-                    <App />
-                </IonReactRouter>
-            </IonApp>
+            <App />
         </Provider>
     </React.StrictMode>
 )
