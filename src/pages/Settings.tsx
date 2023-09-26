@@ -1,8 +1,7 @@
 import { useState } from "react"
 import {
     IonAlert, IonBackButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonItem,
-    IonPage,
-    IonSearchbar, IonText, IonTitle, IonToggle, IonToolbar, useIonRouter, useIonToast
+    IonPage, IonSearchbar, IonText, IonTitle, IonToggle, IonToolbar, useIonRouter, useIonToast
 } from "@ionic/react"
 import { Auth } from "aws-amplify"
 import UserProfileCard from "../components/UserProfileCard"

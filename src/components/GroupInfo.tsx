@@ -75,7 +75,7 @@ export function GroupInfoModal({ group, close }: GroupInfoModalProps) {
                         Cancel
                     </IonButton>
                 </IonButtons>
-                <IonTitle>Welcome</IonTitle>
+                <IonTitle>Group's info</IonTitle>
             </IonToolbar>
         </IonHeader>
         <GroupInfoContent group={group} />

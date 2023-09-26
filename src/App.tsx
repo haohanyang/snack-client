@@ -11,7 +11,6 @@ import { chatbubble, people, settings } from "ionicons/icons"
 import Chats from "./pages/Chats"
 import Contacts from "./pages/Contacts"
 import Settings from "./pages/Settings"
-import EditProfile from "./pages/EditProfile"
 import Home from "./pages/Home"
 import Register from "./pages/Register"
 import Login from "./pages/Login"
@@ -113,17 +112,12 @@ const TabRoutes = ({ userId, setUserId }: tabRoutesProps) => {
             <Route exact path="/chats">
                 <Chats userId={userId} />
             </Route>
-            <Route path="/chats/:type/:id">
-                <Chat userId={userId} />
-            </Route>
+            <Route exact path="/chats/:type/:id" render={props => <Chat {...props} userId={userId} />} />
             <Route exact path="/contacts">
                 <Contacts userId={userId} />
             </Route>
             <Route exact path="/settings">
                 <Settings userId={userId} setUserId={setUserId} />
-            </Route>
-            <Route exact path="/settings/edit-profile">
-                <EditProfile userId={userId} />
             </Route>
             <Route>
                 <Redirect to="/chats" />

@@ -1,13 +1,13 @@
 import { useRef } from "react"
 import {
-    apiSlice, useLazyGetGroupChannelQuery, useLazyGetUserChannelQuery, useSendChannelMessageMutation
+    apiSlice, useGetGroupChannelQuery, useGetUserChannelQuery, useSendChannelMessageMutation
 } from "../slices/apiSlice"
-import { Redirect, useParams } from "react-router"
+import { RouteComponentProps } from "react-router"
 import {
     IonBackButton, IonButton, IonButtons, RefresherEventDetail,
     IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonItem, IonPage,
     IonToolbar, IonRefresher, IonRefresherContent, useIonLoading, useIonToast,
-    IonLoading, IonAlert, useIonRouter, useIonViewDidEnter, useIonViewWillEnter
+    IonLoading, IonAlert, useIonRouter
 } from "@ionic/react"
 import {
     cameraOutline, documentOutline, ellipsisHorizontal, ellipsisVertical,
@@ -25,16 +25,19 @@ import { useAppDispatch } from "../hooks"
 import stomp, { StompWrapper } from "../ws"
 import './Chat.css'
 
-interface ChatProps {
+interface ChatProps extends RouteComponentProps<{ id: string, type: string }> {
     userId: string
 }
 
-const Chat = ({ userId }: ChatProps) => {
+const Chat = ({ userId, match }: ChatProps) => {
 
-    const { id, type } = useParams<{ id: string, type: string }>()
-
-    const [fetchUserChannel, { data: userChannel, isFetching: isFetchingUserChannel, isError: isFetchingUserChannelError }] = useLazyGetUserChannelQuery()
-    const [fetchGroupChannel, { data: groupChannel, isFetching: isFetchingGroupChannel, isError: isFetchingGroupChannelError }] = useLazyGetGroupChannelQuery()
+    const { id, type } = match.params
+    const { data: userChannel, isFetching: isFetchingUserChannel, isError: isFetchingUserChannelError } = useGetUserChannelQuery(id, {
+        skip: type !== "user" || !/^\d+$/.test(id)
+    })
+    const { data: groupChannel, isFetching: isFetchingGroupChannel, isError: isFetchingGroupChannelError } = useGetGroupChannelQuery(id, {
+        skip: type !== "group" || !/^\d+$/.test(id)
+    })
 
     const router = useIonRouter()
     const [presentToast] = useIonToast()
@@ -43,14 +46,6 @@ const Chat = ({ userId }: ChatProps) => {
     const [sendChannelMessage, { isLoading }] = useSendChannelMessageMutation()
     const dispatch = useAppDispatch()
     const ws = useRef<StompWrapper>(stomp)
-
-    useIonViewDidEnter(() => {
-        if (type === "user") {
-            fetchUserChannel(id)
-        } else if (type === "group") {
-            fetchGroupChannel(id)
-        }
-    })
 
     const refresh = async (event: CustomEvent<RefresherEventDetail>, channel: ChannelInfo) => {
         if (!ws.current.connected) {
@@ -265,23 +260,20 @@ const Chat = ({ userId }: ChatProps) => {
         type: type === "user" ? ChannelType.USER : ChannelType.GROUP
     }
 
-    if ((type !== "user" && type !== "group")) {
-        return <Redirect to="/chats" />
-    }
-
-    if ((type === "user" && isFetchingUserChannelError) || (type == "group" && isFetchingGroupChannelError)) {
+    if ((type !== "user" && type !== "group") || !/^\d+$/.test(id) ||
+        (type === "user" && isFetchingUserChannelError) || (type == "group" && isFetchingGroupChannelError)) {
         return <IonPage>
-            <IonAlert security="error" isOpen={true} message="Failed to fetch the channel" buttons={
+            <IonAlert header="Error" isOpen={true} message="Failed to fetch the chat. Please try again later." buttons={
                 [{
                     text: "Back",
                     handler: () => {
-                        router.push("/chats")
+                        router.push("/chats", "back")
                     },
                 }]} />
         </IonPage>
     }
 
-    if (!userChannel && !groupChannel) {
+    if ((type === "user" && isFetchingUserChannel) || (type == "group" && isFetchingGroupChannel)) {
         return <IonPage>
             <IonLoading isOpen={true} />
         </IonPage>
