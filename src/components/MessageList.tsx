@@ -1,10 +1,10 @@
-import { IonCard, IonCardContent, IonIcon, IonItem, IonList, IonSpinner } from "@ionic/react"
+import { IonCard, IonCardContent, IonIcon, IonList, IonSpinner } from "@ionic/react"
 import { useGetChannelMessagesQuery } from "../slices/apiSlice"
 import { alertCircleOutline } from "ionicons/icons"
 import { ChannelInfo } from "../models/channel"
 
 import { AttachmentMessageItem, TextMessageItem } from "./MessageItem"
-import { useEffect, useRef } from "react"
+import { useLayoutEffect, useRef } from "react"
 
 interface MessageListProps {
     userId: string
@@ -16,12 +16,12 @@ export default function MessageList({ userId, channel }: MessageListProps) {
         useGetChannelMessagesQuery(channel)
     const messageListRef = useRef<HTMLIonListElement>(null)
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         // Scroll to bottom when messages are loaded
         if (messages) {
             const timer = setTimeout(() => {
                 messageListRef.current?.lastElementChild?.scrollIntoView({ behavior: "instant" })
-            })
+            }, 700)
             return () => clearTimeout(timer)
         }
     }, [messages])

@@ -2,7 +2,7 @@ import { useRef } from "react"
 import {
     apiSlice, useGetGroupChannelQuery, useGetUserChannelQuery, useSendChannelMessageMutation
 } from "../slices/apiSlice"
-import { RouteComponentProps } from "react-router"
+import { useParams } from "react-router"
 import {
     IonBackButton, IonButton, IonButtons, RefresherEventDetail,
     IonContent, IonFooter, IonHeader, IonIcon, IonInput, IonItem, IonPage,
@@ -25,19 +25,21 @@ import { useAppDispatch } from "../hooks"
 import stomp, { StompWrapper } from "../ws"
 import './Chat.css'
 
-interface ChatProps extends RouteComponentProps<{ id: string, type: string }> {
+interface ChatProps {
     userId: string
 }
 
-const Chat = ({ userId, match }: ChatProps) => {
+const Chat = ({ userId }: ChatProps) => {
 
-    const { id, type } = match.params
-    const { data: userChannel, isFetching: isFetchingUserChannel, isError: isFetchingUserChannelError } = useGetUserChannelQuery(id, {
-        skip: type !== "user" || !/^\d+$/.test(id)
+    const { id, type } = useParams<{ id: string, type: string }>()
+
+    const { data: userChannel, isError: isFetchingUserChannelError } = useGetUserChannelQuery(id, {
+        skip: type !== "user" || !/^\d+$/.test(id),
     })
-    const { data: groupChannel, isFetching: isFetchingGroupChannel, isError: isFetchingGroupChannelError } = useGetGroupChannelQuery(id, {
+    const { data: groupChannel, isError: isFetchingGroupChannelError } = useGetGroupChannelQuery(id, {
         skip: type !== "group" || !/^\d+$/.test(id)
     })
+
 
     const router = useIonRouter()
     const [presentToast] = useIonToast()
@@ -273,7 +275,7 @@ const Chat = ({ userId, match }: ChatProps) => {
         </IonPage>
     }
 
-    if ((type === "user" && isFetchingUserChannel) || (type == "group" && isFetchingGroupChannel)) {
+    if (!userChannel && !groupChannel) {
         return <IonPage>
             <IonLoading isOpen={true} />
         </IonPage>

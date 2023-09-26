@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { Auth } from "aws-amplify"
 import { Redirect, Route, useLocation } from "react-router-dom"
 import { IonReactRouter } from "@ionic/react-router"
@@ -99,7 +99,7 @@ const App: React.FC = () => {
 const TabRoutes = ({ userId, setUserId }: tabRoutesProps) => {
     const { pathname } = useLocation()
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (pathname === "/chats" || pathname === "/contacts" || pathname === "/settings") {
             document.querySelector("ion-tab-bar")?.classList.remove("hidden")
         } else {
@@ -112,7 +112,9 @@ const TabRoutes = ({ userId, setUserId }: tabRoutesProps) => {
             <Route exact path="/chats">
                 <Chats userId={userId} />
             </Route>
-            <Route exact path="/chats/:type/:id" render={props => <Chat {...props} userId={userId} />} />
+            <Route exact path="/chats/:type/:id">
+                <Chat userId={userId} />
+            </Route>
             <Route exact path="/contacts">
                 <Contacts userId={userId} />
             </Route>
